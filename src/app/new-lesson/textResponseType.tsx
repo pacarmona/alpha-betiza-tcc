@@ -25,7 +25,13 @@ const InputBlock = ({
   </div>
 );
 
-export default function TextResponseType() {
+export default function TextResponseType({
+  saveCorrectAnswerId,
+  saveResponseLesson,
+}: {
+  saveCorrectAnswerId: (correctAnswerId: string | null) => void;
+  saveResponseLesson: (responseLesson: { [key: string]: string }) => void;
+}) {
   const [responseLesson, setResponses] = useState<{ [key: string]: string }>({
     text01: "",
     text02: "",
@@ -39,11 +45,17 @@ export default function TextResponseType() {
 
   const handleChange =
     (id: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      setResponses((prev) => ({ ...prev, [id]: e.target.value }));
+      const newResponse = (prev: { [key: string]: string }) => ({
+        ...prev,
+        [id]: e.target.value,
+      });
+      setResponses(newResponse);
+      saveResponseLesson({ ...responseLesson, [id]: e.target.value });
     };
 
   const handleSwitchChange = (id: string) => {
-    setCorrectAnswerId((prevId) => (prevId === id ? null : id));
+    setCorrectAnswerId(id);
+    saveCorrectAnswerId(id);
   };
 
   return (

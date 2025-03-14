@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     const question = await prisma.question.findUnique({
       where: { id: questionId },
     });
-
+    console.log(questionId);
     if (!question) {
       return NextResponse.json(
         { message: "Questão não encontrada" },

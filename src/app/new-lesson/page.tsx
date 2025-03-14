@@ -21,7 +21,7 @@ export default function NewLesson() {
   const [questions, setQuestions] = useState([{ id: 1 }]);
 
   const [lessonId, setLessonId] = useState<string | null>(null);
-//teste
+  //teste
   const handleAddQuestion = () => {
     if (questions.length < 10) {
       setQuestions([...questions, { id: questions.length + 1 }]);
@@ -38,6 +38,27 @@ export default function NewLesson() {
     useState<string>("Textual");
   const [selectedAnswersType, setSelectedAnswersType] =
     useState<string>("Textual");
+
+  const [responseLesson, setResponseLesson] = useState<{
+    [key: string]: string;
+  }>({
+    text01: "",
+    text02: "",
+    text03: "",
+    text04: "",
+  });
+
+  const [correctAnswerId, setCorrectAnswerId] = useState<string | null>(
+    "text01"
+  );
+
+  const saveResponseLesson = (responseLesson: { [key: string]: string }) => {
+    setResponseLesson(responseLesson);
+  };
+  const saveCorrectAnswerId = (correctAnswerId: string | null) => {
+    setCorrectAnswerId(correctAnswerId);
+    console.log(correctAnswerId);
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -83,7 +104,37 @@ export default function NewLesson() {
       }
 
       const result = await response.json();
+      const questionID = result.questionId;
       SuccessText(result.message);
+      try {
+        const answers = [];
+        for (const [key, value] of Object.entries(responseLesson)) {
+          answers.push({
+            questionId: questionID,
+            text: value,
+            type: answerType,
+            is_correct: key === correctAnswerId,
+          });
+        }
+
+        const response = await fetch(`/api/answer`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            questionId: questionID,
+            answers: answers,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Falha ao salvar a resposta");
+        }
+      } catch (error) {
+        console.error(error);
+        errorText("Ocorreu um erro ao salvar a resposta");
+      }
     } catch (error) {
       console.error(error);
       errorText("Ocorreu um erro ao salvar a questão");
@@ -111,7 +162,12 @@ export default function NewLesson() {
   const renderAnswersType = () => {
     switch (selectedAnswersType) {
       case "Textual":
-        return <TextResponseType />;
+        return (
+          <TextResponseType
+            saveCorrectAnswerId={saveCorrectAnswerId}
+            saveResponseLesson={saveResponseLesson}
+          />
+        );
       case "Visual":
         return <VisualResponseType />;
       case "Auditivo":
