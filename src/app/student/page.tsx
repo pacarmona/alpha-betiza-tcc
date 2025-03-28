@@ -11,54 +11,33 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Lesson } from "@prisma/client";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const listActivity = [
-    {
-      titleActivity: "Atividade 1",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 2",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-  ];
+
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+
+  useEffect(() => {
+    async function fetchLessons() {
+      try {
+        const response = await fetch("/api/lessons");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar as lessons");
+        }
+        const data: Lesson[] = await response.json();
+        setLessons(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchLessons();
+  }, []);
+
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
@@ -69,22 +48,18 @@ export default function Home() {
       <TopBar />
       <div className="w-full h-full flex flex-col ml-10 mt-10">
         <div className="flex flex-wrap gap-4">
-          {listActivity.map((activity, index) => (
+          {lessons.map((activity, index) => (
             <Card key={index} className="w-[350px] bg-[#D9D9D9]">
               <CardHeader>
-                <CardTitle>{activity.titleActivity}</CardTitle>
-                <CardDescription>{activity.categoryActivity}</CardDescription>
+                <CardTitle>{activity.title}</CardTitle>
+                <CardDescription>{}</CardDescription>
               </CardHeader>
-              <CardContent>
-                {activity.imageActivity && (
-                  <img
-                    src={activity.imageActivity}
-                    alt={activity.titleActivity}
-                  />
-                )}
-              </CardContent>
+              <CardContent></CardContent>
               <CardFooter className="flex justify-between">
-                <Button className="w-full bg-[#B6B8BF] hover:bg-[#8f9197]">
+                <Button
+                  className="w-full bg-[#B6B8BF] hover:bg-[#8f9197]"
+                  onClick={() => router.push(`/lesson?lessonId=${activity.id}`)}
+                >
                   Ir para atividade
                 </Button>
               </CardFooter>

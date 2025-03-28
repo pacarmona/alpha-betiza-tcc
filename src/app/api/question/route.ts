@@ -32,3 +32,28 @@ export async function POST(req: Request) {
     );
   }
 }
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const lessonId = searchParams.get("lessonId");
+
+  if (!lessonId) {
+    return NextResponse.json(
+      { error: "lessonId é obrigatório" },
+      { status: 400 }
+    );
+  }
+
+  try {
+    const questions = await prisma.question.findMany({
+      where: { lessonId },
+    });
+
+    return NextResponse.json(questions);
+  } catch (error) {
+    console.error("Erro ao buscar questões:", error);
+    return NextResponse.json(
+      { error: "Erro interno do servidor" },
+      { status: 500 }
+    );
+  }
+}

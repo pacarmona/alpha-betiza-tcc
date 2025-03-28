@@ -42,3 +42,34 @@ export async function POST(req: Request) {
     );
   }
 }
+export async function GET(req: Request) {
+  const url = new URL(req.url);
+  const questionId = url.searchParams.get("questionId");
+
+  try {
+    if (!questionId) {
+      return NextResponse.json(
+        { message: "ID da questão não fornecido" },
+        { status: 400 }
+      );
+    }
+
+    const answers = await prisma.answer.findMany({
+      where: { questionId: questionId },
+    });
+
+    if (answers.length === 0) {
+      return NextResponse.json(
+        { message: "Nenhuma resposta encontrada para esta questão" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(answers, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Erro ao buscar as respostas" },
+      { status: 500 }
+    );
+  }
+}

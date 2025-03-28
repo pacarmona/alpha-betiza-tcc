@@ -16,6 +16,7 @@ import VisualResponseType from "./visualResponseType";
 
 export default function NewLesson() {
   const router = useRouter();
+  //const params = useParams();
   const searchParams = useSearchParams();
 
   const [questions, setQuestions] = useState([{ id: 1 }]);

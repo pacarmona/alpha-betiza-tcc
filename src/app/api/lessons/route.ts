@@ -27,3 +27,14 @@ export async function POST(req: Request) {
     );
   }
 }
+export async function GET() {
+  try {
+    const lessons = await prisma.lesson.findMany();
+    return NextResponse.json(lessons, { status: 200 });
+  } catch (error) {
+    return NextResponse.json(
+      { message: "Erro ao buscar as lessons" },
+      { status: 500 }
+    );
+  }
+}

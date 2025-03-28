@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/providers/UserProvider";
+import { Lesson } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
@@ -21,53 +22,7 @@ export default function Home() {
   const router = useRouter();
   const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const listActivity = [
-    {
-      titleActivity: "Atividade 1",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 2",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 1",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 2",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-    {
-      titleActivity: "Atividade 3",
-      categoryActivity: "Sílabas",
-      imageActivity: "",
-    },
-  ];
+
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
@@ -76,6 +31,25 @@ export default function Home() {
       router.push("/login");
     }
   }, [router, token]);
+
+  const [lessons, setLessons] = useState<Lesson[]>([]);
+
+  useEffect(() => {
+    async function fetchLessons() {
+      try {
+        const response = await fetch("/api/lessons");
+        if (!response.ok) {
+          throw new Error("Erro ao buscar as lessons");
+        }
+        const data: Lesson[] = await response.json();
+        setLessons(data);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    fetchLessons();
+  }, []);
 
   const [activityTitle, setActivityTitle] = useState("");
 
@@ -132,22 +106,18 @@ export default function Home() {
               </Button>
             </CardFooter>
           </Card>
-          {listActivity.map((activity, index) => (
+          {lessons.map((activity, index) => (
             <Card key={index} className="w-[350px] bg-[#D9D9D9]">
               <CardHeader>
-                <CardTitle>{activity.titleActivity}</CardTitle>
-                <CardDescription>{activity.categoryActivity}</CardDescription>
+                <CardTitle>{activity.title}</CardTitle>
+                <CardDescription>{}</CardDescription>
               </CardHeader>
-              <CardContent>
-                {activity.imageActivity && (
-                  <img
-                    src={activity.imageActivity}
-                    alt={activity.titleActivity}
-                  />
-                )}
-              </CardContent>
+              <CardContent></CardContent>
               <CardFooter className="flex justify-between">
-                <Button className="w-full bg-[#B6B8BF] hover:bg-[#8f9197]">
+                <Button
+                  className="w-full bg-[#B6B8BF] hover:bg-[#8f9197]"
+                  onClick={() => router.push(`/lesson?lessonId=${activity.id}`)}
+                >
                   Ir para atividade
                 </Button>
               </CardFooter>
