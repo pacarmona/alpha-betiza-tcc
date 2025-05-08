@@ -42,24 +42,11 @@ export default function NewLesson() {
   const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
     null
   );
+  const [isEditing, setIsEditing] = useState(false);
+  const [isFormDisabled, setIsFormDisabled] = useState(true);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
 
   const [lessonId, setLessonId] = useState<string | null>(null);
-  //teste
-  const handleAddQuestion = () => {
-    if (questions.length < 10 && isFormValid()) {
-      setQuestions([
-        ...questions,
-        {
-          id: (questions.length + 1).toString(),
-          title: `Questão ${questions.length + 1}`,
-        },
-      ]);
-    } else if (!isFormValid()) {
-      errorText(
-        "Preencha todos os campos obrigatórios antes de adicionar uma nova questão"
-      );
-    }
-  };
 
   const [formData, setFormData] = useState({
     questionTitle: "",
@@ -137,6 +124,9 @@ export default function NewLesson() {
 
   const handleQuestionClick = async (questionId: string) => {
     setSelectedQuestionId(questionId);
+    setIsEditing(false);
+    setIsFormDisabled(true);
+    setIsCreatingNew(false);
 
     try {
       // Buscar os dados da questão
@@ -193,6 +183,70 @@ export default function NewLesson() {
     }
   };
 
+  const handleDeleteQuestion = async (questionId: string) => {
+    try {
+      const result = await Swal.fire({
+        title: "Tem certeza?",
+        text: "Esta ação não poderá ser revertida!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sim, excluir!",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        const response = await fetch(`/api/question/${questionId}`, {
+          method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Erro ao excluir a questão");
+        }
+
+        // Atualizar a lista de questões
+        setQuestions(questions.filter((q) => q.id !== questionId));
+
+        // Se a questão excluída era a selecionada, limpar o formulário
+        if (selectedQuestionId === questionId) {
+          setSelectedQuestionId(null);
+          setFormData({ questionTitle: "" });
+          setDescription("");
+          setResponseLesson({
+            text01: "",
+            text02: "",
+            text03: "",
+            text04: "",
+          });
+          setCorrectAnswerId("text01");
+        }
+
+        SuccessText(data.message || "Questão excluída com sucesso!");
+      }
+    } catch (error) {
+      console.error(error);
+      errorText(
+        error instanceof Error ? error.message : "Erro ao excluir a questão"
+      );
+    }
+  };
+
+  const handleEditClick = () => {
+    if (isEditing) {
+      // Se estiver editando, salva as alterações
+      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+      setIsEditing(false);
+      setIsFormDisabled(true);
+    } else {
+      // Se não estiver editando, habilita a edição
+      setIsEditing(true);
+      setIsFormDisabled(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { questionTitle } = formData;
@@ -208,7 +262,7 @@ export default function NewLesson() {
       return;
     }
 
-    if (questions.length >= 10) {
+    if (questions.length >= 10 && !selectedQuestionId) {
       errorText("Limite máximo de 10 questões atingido");
       return;
     }
@@ -217,48 +271,66 @@ export default function NewLesson() {
     const answerType = selectedAnswersType.toUpperCase();
 
     try {
-      const response = await fetch(`/api/question`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lessonId: lessonId,
-          title: questionTitle,
-          questionType: questionType,
-          answerType: answerType,
-          description: description,
-        }),
-      });
+      let response;
+      let questionID;
 
-      if (!response.ok) {
-        throw new Error("Falha ao salvar a questão");
+      if (selectedQuestionId) {
+        // Atualizar questão existente
+        response = await fetch(`/api/question/${selectedQuestionId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            title: questionTitle,
+            questionType: questionType,
+            answerType: answerType,
+            description: description,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Falha ao atualizar a questão");
+        }
+
+        const result = await response.json();
+        questionID = selectedQuestionId;
+        SuccessText(result.message);
+      } else {
+        // Criar nova questão
+        response = await fetch(`/api/question`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            lessonId: lessonId,
+            title: questionTitle,
+            questionType: questionType,
+            answerType: answerType,
+            description: description,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Falha ao salvar a questão");
+        }
+
+        const result = await response.json();
+        questionID = result.questionId;
+        SuccessText(result.message);
+
+        // Adicionar a nova questão à lista de questões
+        setQuestions([
+          ...questions,
+          {
+            id: questionID,
+            title: `Questão ${questions.length + 1}`,
+          },
+        ]);
       }
 
-      const result = await response.json();
-      const questionID = result.questionId;
-      SuccessText(result.message);
-
-      // Adicionar a nova questão à lista de questões
-      setQuestions([
-        ...questions,
-        {
-          id: questionID,
-          title: `Questão ${questions.length + 1}`,
-        },
-      ]);
-
-      // Limpar o formulário
-      setFormData({ questionTitle: "" });
-      setDescription("");
-      setResponseLesson({
-        text01: "",
-        text02: "",
-        text03: "",
-        text04: "",
-      });
-      setCorrectAnswerId("text01");
-
+      // Atualizar as respostas
       try {
         const answers = [];
         for (const [key, value] of Object.entries(responseLesson)) {
@@ -271,7 +343,7 @@ export default function NewLesson() {
         }
 
         const response = await fetch(`/api/answer`, {
-          method: "POST",
+          method: selectedQuestionId ? "PUT" : "POST",
           headers: {
             "Content-Type": "application/json",
           },
@@ -287,6 +359,19 @@ export default function NewLesson() {
       } catch (error) {
         console.error(error);
         errorText("Ocorreu um erro ao salvar a resposta");
+      }
+
+      // Limpar o formulário apenas se for uma nova questão
+      if (!selectedQuestionId) {
+        setFormData({ questionTitle: "" });
+        setDescription("");
+        setResponseLesson({
+          text01: "",
+          text02: "",
+          text03: "",
+          text04: "",
+        });
+        setCorrectAnswerId("text01");
       }
     } catch (error) {
       console.error(error);
@@ -332,13 +417,28 @@ export default function NewLesson() {
     }
   };
 
-  const isFormValid = () => {
-    return (
-      formData.questionTitle.trim() !== "" &&
-      description.trim() !== "" &&
-      Object.values(responseLesson).some((value) => value.trim() !== "") &&
-      correctAnswerId !== null
-    );
+  const handleAddNewQuestion = () => {
+    if (isCreatingNew) {
+      // Se já estiver criando, salva a questão
+      handleSubmit({ preventDefault: () => {} } as React.FormEvent);
+      setIsCreatingNew(false);
+      setIsFormDisabled(true);
+    } else {
+      // Se não estiver criando, prepara para criar uma nova
+      setSelectedQuestionId(null);
+      setIsEditing(false);
+      setIsFormDisabled(false);
+      setIsCreatingNew(true);
+      setFormData({ questionTitle: "" });
+      setDescription("");
+      setResponseLesson({
+        text01: "",
+        text02: "",
+        text03: "",
+        text04: "",
+      });
+      setCorrectAnswerId("text01");
+    }
   };
 
   return (
@@ -349,44 +449,32 @@ export default function NewLesson() {
       {/* Barra lateral */}
       <div className="w-full h-full flex">
         <div className="bg-[#D9D9D9] h-full w-[15%]">
-          <div className="justify-between items-center flex flex-col h-full">
+          <div className="flex flex-col items-center gap-2 pt-4">
             {questions.map((question) => (
-              <Button
-                key={question.id}
-                className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mt-4 hover:bg-[#8f9197] ${
-                  selectedQuestionId === question.id ? "bg-[#53A85C]" : ""
-                }`}
-                onClick={() => handleQuestionClick(question.id)}
-              >
-                {question.title}
-              </Button>
+              <div key={question.id} className="flex items-center gap-2">
+                <Button
+                  className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#8f9197] ${
+                    selectedQuestionId === question.id ? "bg-[#53A85C]" : ""
+                  }`}
+                  onClick={() => handleQuestionClick(question.id)}
+                >
+                  {question.title}
+                </Button>
+                <Button
+                  className="bg-red-500 text-white font-bold py-2 px-2 rounded hover:bg-red-600"
+                  onClick={() => handleDeleteQuestion(question.id)}
+                >
+                  X
+                </Button>
+              </div>
             ))}
-            <Button
-              onClick={handleAddQuestion}
-              disabled={!isFormValid()}
-              className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mb-56 mt-4 hover:bg-[#8f9197] ${
-                !isFormValid() ? "opacity-50 cursor-not-allowed" : ""
-              }`}
-            >
-              Adicionar Questão
-            </Button>
           </div>
         </div>
-        {/*<div className="bg-[#D9D9D9] h-full w-[15%]">
-          <div className="justify-between items-center flex flex-col h-full">
-            <Button className="bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mt-20 hover:bg-[#8f9197]">
-              Questão 1
-            </Button>
-            <Button className="bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mb-56 hover:bg-[#8f9197]">
-              Adicionar Questão
-            </Button>
-          </div>
-        </div>*/}
 
         {/* Conteúdo principal da tela */}
         <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
           {/* Título da questão */}
-          <div className=" bg-white w-4/5 ">
+          <div className="bg-white w-4/5">
             <Label htmlFor="questionTitle">Título da questão</Label>
             <Input
               id="questionTitle"
@@ -395,6 +483,7 @@ export default function NewLesson() {
               placeholder="Digite o título da questão"
               value={formData.questionTitle}
               onChange={handleChange}
+              disabled={isFormDisabled}
             />
           </div>
 
@@ -403,6 +492,7 @@ export default function NewLesson() {
           <TypeQuestion
             selectedQuestionType={selectedQuestionType}
             setSelectedQuestionType={setSelectedQuestionType}
+            disabled={isFormDisabled}
           />
 
           {/* Renderiza o tipo de questão escolhido */}
@@ -417,6 +507,7 @@ export default function NewLesson() {
             <TypeAnswers
               selectedAnswersType={selectedAnswersType}
               setSelectedResponseType={setSelectedAnswersType}
+              disabled={isFormDisabled}
             />
 
             {/* Espaçamento de 5 entre o tipo de resposta e o conteúdo renderizado */}
@@ -427,19 +518,41 @@ export default function NewLesson() {
           </div>
 
           {/* Botões para cancelar ou confirmar */}
-          <div className="text-center flex gap-4 justify-end mr-64 mt-10">
-            <Button
-              className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400"
-              onClick={() => router.back()}
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
-            >
-              Salvar
-            </Button>
+          <div className="text-center flex gap-4 justify-between mr-64 mt-10">
+            <div>
+              {selectedQuestionId && (
+                <Button
+                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                  onClick={handleAddNewQuestion}
+                >
+                  {isCreatingNew ? "Salvar" : "Adicionar Questão"}
+                </Button>
+              )}
+            </div>
+            <div className="flex gap-4">
+              <Button
+                className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400"
+                onClick={() => router.back()}
+              >
+                Cancelar
+              </Button>
+              {!selectedQuestionId && (
+                <Button
+                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                  onClick={handleAddNewQuestion}
+                >
+                  {isCreatingNew ? "Salvar" : "Adicionar Questão"}
+                </Button>
+              )}
+              {selectedQuestionId && (
+                <Button
+                  onClick={handleEditClick}
+                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                >
+                  {isEditing ? "Salvar" : "Editar"}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
