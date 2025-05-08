@@ -14,6 +14,14 @@ import QuestionVisual from "./questionVisual";
 import TextResponseType from "./textResponseType";
 import VisualResponseType from "./visualResponseType";
 
+interface Question {
+  id: string;
+  title: string;
+  description: string;
+  type: string;
+  answer_type: string;
+}
+
 export default function NewLesson() {
   const router = useRouter();
   //const params = useParams();
@@ -90,8 +98,15 @@ export default function NewLesson() {
       if (!response.ok) {
         throw new Error("Erro ao buscar as questões");
       }
-      const data = await response.json();
-      setQuestions(data);
+      const data: Question[] = await response.json();
+      // Transformar os dados para manter o padrão de numeração
+      const formattedQuestions = data.map(
+        (question: Question, index: number) => ({
+          id: question.id,
+          title: `Questão ${index + 1}`,
+        })
+      );
+      setQuestions(formattedQuestions);
     } catch (error) {
       console.error(error);
       errorText("Erro ao carregar as questões");
@@ -129,6 +144,12 @@ export default function NewLesson() {
       errorText("Preencha todos os campos obrigatórios");
       return;
     }
+
+    if (questions.length >= 10) {
+      errorText("Limite máximo de 10 questões atingido");
+      return;
+    }
+
     const questionType = selectedQuestionType.toUpperCase();
     const answerType = selectedAnswersType.toUpperCase();
 
@@ -155,8 +176,14 @@ export default function NewLesson() {
       const questionID = result.questionId;
       SuccessText(result.message);
 
-      // Atualizar a lista de questões após salvar
-      await fetchQuestions();
+      // Adicionar a nova questão à lista de questões
+      setQuestions([
+        ...questions,
+        {
+          id: questionID,
+          title: `Questão ${questions.length + 1}`,
+        },
+      ]);
 
       // Limpar o formulário
       setFormData({ questionTitle: "" });
