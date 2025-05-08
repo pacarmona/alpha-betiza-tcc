@@ -1,61 +1,51 @@
+import InputBlock from "@/components/inputBlock";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import React, { useState } from "react";
-import { Input } from "../../components/ui/input";
-
-const InputBlock = ({
-  id,
-  value,
-  onChange,
-  placeholder,
-}: {
-  id?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  placeholder: string;
-}) => (
-  <div className="bg-white w-96 border border-gray-300 p-4 rounded-lg shadow-md">
-    <Input
-      id={id}
-      value={value}
-      onChange={onChange}
-      placeholder={placeholder}
-      className="w-full p-2 border border-gray-300 rounded-md"
-    />
-  </div>
-);
+import { useEffect, useState } from "react";
 
 export default function TextResponseType({
   saveCorrectAnswerId,
   saveResponseLesson,
+  initialAnswers,
+  initialCorrectAnswer,
 }: {
   saveCorrectAnswerId: (correctAnswerId: string | null) => void;
   saveResponseLesson: (responseLesson: { [key: string]: string }) => void;
+  initialAnswers?: { [key: string]: string };
+  initialCorrectAnswer?: string | null;
 }) {
-  const [responseLesson, setResponses] = useState<{ [key: string]: string }>({
-    text01: "",
-    text02: "",
-    text03: "",
-    text04: "",
-  });
-
-  const [correctAnswerId, setCorrectAnswerId] = useState<string | null>(
-    "text01"
+  const [responseLesson, setResponses] = useState<{ [key: string]: string }>(
+    initialAnswers || {
+      text01: "",
+      text02: "",
+      text03: "",
+      text04: "",
+    }
   );
 
-  const handleChange =
-    (id: string) => (e: React.ChangeEvent<HTMLInputElement>) => {
-      const newResponse = (prev: { [key: string]: string }) => ({
-        ...prev,
-        [id]: e.target.value,
-      });
-      setResponses(newResponse);
-      saveResponseLesson({ ...responseLesson, [id]: e.target.value });
-    };
+  const [correctAnswerId, setCorrectAnswerId] = useState<string | null>(
+    initialCorrectAnswer || "text01"
+  );
 
-  const handleSwitchChange = (id: string) => {
-    setCorrectAnswerId(id);
-    saveCorrectAnswerId(id);
+  useEffect(() => {
+    if (initialAnswers) {
+      setResponses(initialAnswers);
+    }
+    if (initialCorrectAnswer !== undefined) {
+      setCorrectAnswerId(initialCorrectAnswer);
+      saveCorrectAnswerId(initialCorrectAnswer);
+    }
+  }, [initialAnswers, initialCorrectAnswer]);
+
+  const handleChange = (key: string) => (value: string) => {
+    const newResponses = { ...responseLesson, [key]: value };
+    setResponses(newResponses);
+    saveResponseLesson(newResponses);
+  };
+
+  const handleSwitchChange = (key: string) => {
+    setCorrectAnswerId(key);
+    saveCorrectAnswerId(key);
   };
 
   return (

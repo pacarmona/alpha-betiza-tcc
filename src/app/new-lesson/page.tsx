@@ -20,6 +20,15 @@ interface Question {
   description: string;
   type: string;
   answer_type: string;
+  Answers: Answer[];
+}
+
+interface Answer {
+  id: string;
+  text: string;
+  type: string;
+  is_correct: boolean;
+  questionId: string;
 }
 
 export default function NewLesson() {
@@ -126,8 +135,62 @@ export default function NewLesson() {
     }
   }, [lessonId]);
 
-  const handleQuestionClick = (questionId: string) => {
+  const handleQuestionClick = async (questionId: string) => {
     setSelectedQuestionId(questionId);
+
+    try {
+      // Buscar os dados da questão
+      const response = await fetch(`/api/question/${questionId}`);
+      if (!response.ok) {
+        throw new Error("Erro ao buscar os dados da questão");
+      }
+      const questionData: Question = await response.json();
+
+      // Atualizar o formulário com os dados da questão
+      setFormData({ questionTitle: questionData.title });
+      setDescription(questionData.description);
+
+      // Converter o tipo da questão para o formato esperado
+      const questionType = questionData.type.toLowerCase();
+      const formattedQuestionType =
+        questionType.charAt(0).toUpperCase() + questionType.slice(1);
+      setSelectedQuestionType(formattedQuestionType);
+
+      // Converter o tipo de resposta para o formato esperado
+      const answerType = questionData.answer_type.toLowerCase();
+      const formattedAnswerType =
+        answerType.charAt(0).toUpperCase() + answerType.slice(1);
+      setSelectedAnswersType(formattedAnswerType);
+
+      // Atualizar o estado das respostas
+      const responseLesson: { [key: string]: string } = {
+        text01: questionData.Answers[0]?.text || "",
+        text02: questionData.Answers[1]?.text || "",
+        text03: questionData.Answers[2]?.text || "",
+        text04: questionData.Answers[3]?.text || "",
+      };
+      setResponseLesson(responseLesson);
+
+      // Encontrar a resposta correta
+      const correctAnswer = questionData.Answers.find(
+        (a: Answer) => a.is_correct
+      );
+      if (correctAnswer) {
+        const correctIndex = questionData.Answers.indexOf(correctAnswer);
+        setCorrectAnswerId(`text0${correctIndex + 1}`);
+      }
+
+      console.log("Dados carregados:", {
+        questionData,
+        responseLesson,
+        correctAnswerId: correctAnswer
+          ? `text0${questionData.Answers.indexOf(correctAnswer) + 1}`
+          : null,
+      });
+    } catch (error) {
+      console.error(error);
+      errorText("Erro ao carregar os dados da questão");
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -256,6 +319,8 @@ export default function NewLesson() {
           <TextResponseType
             saveCorrectAnswerId={saveCorrectAnswerId}
             saveResponseLesson={saveResponseLesson}
+            initialAnswers={responseLesson}
+            initialCorrectAnswer={correctAnswerId}
           />
         );
       case "Visual":
