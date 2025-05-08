@@ -4,6 +4,7 @@ import BottomBar from "@/components/bottomBar";
 import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ export default function Lesson() {
   const lessonId = searchParams.get("lessonId");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isScanningActive, setIsScanningActive] = useState(true);
 
   const [highlightedAnswer, setHighlightedAnswer] = useState<string | null>(
     null
@@ -82,6 +84,11 @@ export default function Lesson() {
   }, [questions, selectedQuestion]);
 
   useEffect(() => {
+    if (!isScanningActive) {
+      setHighlightedAnswer(null);
+      return;
+    }
+
     const intervalId = setInterval(() => {
       if (answers.length === 0) return;
 
@@ -92,9 +99,12 @@ export default function Lesson() {
 
       setHighlightedAnswer(answers[nextIndex].id);
     }, 1000);
+
     const handleMouseClick = () => {
-      setSelectedAnswer(highlightedAnswer);
-      clearInterval(intervalId);
+      if (isScanningActive) {
+        setSelectedAnswer(highlightedAnswer);
+        clearInterval(intervalId);
+      }
     };
 
     document.addEventListener("click", handleMouseClick);
@@ -103,9 +113,12 @@ export default function Lesson() {
       clearInterval(intervalId);
       document.removeEventListener("click", handleMouseClick);
     };
-  }, [answers, highlightedAnswer]);
+  }, [answers, highlightedAnswer, isScanningActive]);
 
   const handleAnswerSelection = (selectedAnswerId: string) => {
+    if (!isScanningActive) {
+      setSelectedAnswer(selectedAnswerId);
+    }
     setAnswers(
       (prevAnswers) =>
         prevAnswers?.map((answer) => ({
@@ -121,6 +134,15 @@ export default function Lesson() {
 
       <div className="w-full h-full flex">
         <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
+          <div className="flex items-center space-x-2 mb-4">
+            <Switch
+              id="scanning-mode"
+              checked={isScanningActive}
+              onCheckedChange={setIsScanningActive}
+            />
+            <Label htmlFor="scanning-mode">Varredura de Tela</Label>
+          </div>
+
           {loading ? (
             <p>Carregando questões...</p>
           ) : questions.length > 0 ? (
@@ -167,6 +189,7 @@ export default function Lesson() {
                           id={`text0${index + 1}`}
                           className={`border p-2 rounded w-full text-gray-700 cursor-pointer 
                             ${
+                              isScanningActive &&
                               highlightedAnswer === answer.id
                                 ? "border-blue-500 border-2"
                                 : ""
