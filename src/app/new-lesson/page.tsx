@@ -19,13 +19,28 @@ export default function NewLesson() {
   //const params = useParams();
   const searchParams = useSearchParams();
 
-  const [questions, setQuestions] = useState([{ id: 1 }]);
+  const [questions, setQuestions] = useState<{ id: string; title: string }[]>(
+    []
+  );
+  const [selectedQuestionId, setSelectedQuestionId] = useState<string | null>(
+    null
+  );
 
   const [lessonId, setLessonId] = useState<string | null>(null);
   //teste
   const handleAddQuestion = () => {
-    if (questions.length < 10) {
-      setQuestions([...questions, { id: questions.length + 1 }]);
+    if (questions.length < 10 && isFormValid()) {
+      setQuestions([
+        ...questions,
+        {
+          id: (questions.length + 1).toString(),
+          title: `Questão ${questions.length + 1}`,
+        },
+      ]);
+    } else if (!isFormValid()) {
+      errorText(
+        "Preencha todos os campos obrigatórios antes de adicionar uma nova questão"
+      );
     }
   };
 
@@ -68,6 +83,38 @@ export default function NewLesson() {
     });
   };
 
+  const fetchQuestions = async () => {
+    if (!lessonId) return;
+    try {
+      const response = await fetch(`/api/question?lessonId=${lessonId}`);
+      if (!response.ok) {
+        throw new Error("Erro ao buscar as questões");
+      }
+      const data = await response.json();
+      setQuestions(data);
+    } catch (error) {
+      console.error(error);
+      errorText("Erro ao carregar as questões");
+    }
+  };
+
+  useEffect(() => {
+    const id = searchParams.get("lessonId");
+    if (id) {
+      setLessonId(id);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (lessonId) {
+      fetchQuestions();
+    }
+  }, [lessonId]);
+
+  const handleQuestionClick = (questionId: string) => {
+    setSelectedQuestionId(questionId);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const { questionTitle } = formData;
@@ -107,6 +154,21 @@ export default function NewLesson() {
       const result = await response.json();
       const questionID = result.questionId;
       SuccessText(result.message);
+
+      // Atualizar a lista de questões após salvar
+      await fetchQuestions();
+
+      // Limpar o formulário
+      setFormData({ questionTitle: "" });
+      setDescription("");
+      setResponseLesson({
+        text01: "",
+        text02: "",
+        text03: "",
+        text04: "",
+      });
+      setCorrectAnswerId("text01");
+
       try {
         const answers = [];
         for (const [key, value] of Object.entries(responseLesson)) {
@@ -178,12 +240,14 @@ export default function NewLesson() {
     }
   };
 
-  useEffect(() => {
-    const id = searchParams.get("lessonId");
-    if (id) {
-      setLessonId(id);
-    }
-  }, [searchParams]);
+  const isFormValid = () => {
+    return (
+      formData.questionTitle.trim() !== "" &&
+      description.trim() !== "" &&
+      Object.values(responseLesson).some((value) => value.trim() !== "") &&
+      correctAnswerId !== null
+    );
+  };
 
   return (
     <div className="w-full flex flex-col h-full">
@@ -197,14 +261,20 @@ export default function NewLesson() {
             {questions.map((question) => (
               <Button
                 key={question.id}
-                className="bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mt-4 hover:bg-[#8f9197]"
+                className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mt-4 hover:bg-[#8f9197] ${
+                  selectedQuestionId === question.id ? "bg-[#53A85C]" : ""
+                }`}
+                onClick={() => handleQuestionClick(question.id)}
               >
-                {`Questão ${question.id}`}
+                {question.title}
               </Button>
             ))}
             <Button
               onClick={handleAddQuestion}
-              className="bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mb-56 mt-4 hover:bg-[#8f9197]"
+              disabled={!isFormValid()}
+              className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 mb-56 mt-4 hover:bg-[#8f9197] ${
+                !isFormValid() ? "opacity-50 cursor-not-allowed" : ""
+              }`}
             >
               Adicionar Questão
             </Button>
