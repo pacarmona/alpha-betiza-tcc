@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 type Answer = PrismaAnswer & {
   selected?: boolean;
@@ -52,16 +53,22 @@ export default function Lesson() {
     setSelectedQuestion(question);
   };
   useEffect(() => {
-    if (!selectedQuestion) return;
+    if (questions.length === 0) return;
+
+    if (!selectedQuestion) {
+      setSelectedQuestion(questions[0]);
+      return;
+    }
 
     async function fetchAnswers() {
       try {
+        if (!selectedQuestion) return;
         const response = await fetch(
-          `/api/answer?questionId=${selectedQuestion?.id}`
+          `/api/answer?questionId=${selectedQuestion.id}`
         );
         if (!response.ok) {
           throw new Error(
-            `Erro ao buscar as respostas da questão ${selectedQuestion?.id}`
+            `Erro ao buscar as respostas da questão ${selectedQuestion.id}`
           );
         }
         const data: Answer[] = await response.json();
@@ -72,7 +79,7 @@ export default function Lesson() {
     }
 
     fetchAnswers();
-  }, [selectedQuestion]);
+  }, [questions, selectedQuestion]);
 
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -108,10 +115,6 @@ export default function Lesson() {
     );
   };
 
-  const getAnswerClass = (isCorrect: boolean) => {
-    return isCorrect ? "bg-green-100" : "bg-red-100";
-  };
-
   return (
     <div className="w-full flex flex-col h-full">
       <TopBar />
@@ -126,14 +129,17 @@ export default function Lesson() {
                 {questions.map((question, index) => (
                   <Button
                     key={question.id}
-                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded mb-2 mr-1"
+                    className={`font-bold py-2 px-4 rounded mb-2 mr-1 ${
+                      selectedQuestion?.id === question.id
+                        ? "bg-blue-700 text-white"
+                        : "bg-blue-500 text-white hover:bg-blue-400"
+                    }`}
                     onClick={() => handleQuestionSelection(question)}
                   >
-                    {index + 1}
+                    {"Questão " + (index + 1)}
                   </Button>
                 ))}
               </div>
-
               {selectedQuestion && (
                 <div className="border p-4 rounded shadow-md bg-white w-full">
                   <p className="text-sm text-gray-500 mt-2">
@@ -166,7 +172,9 @@ export default function Lesson() {
                                 : ""
                             } ${
                             selectedAnswer === answer.id
-                              ? `${getAnswerClass(answer.is_correct)}`
+                              ? answer.is_correct
+                                ? "bg-green-100"
+                                : "bg-red-100"
                               : ""
                           }`}
                           onClick={() => handleAnswerSelection(answer.id)}
@@ -202,4 +210,21 @@ export default function Lesson() {
       <BottomBar />
     </div>
   );
+}
+function errorText(error: string) {
+  return Swal.fire({
+    icon: "error",
+    title: "Ocorreu um erro",
+    text: error,
+    confirmButtonText: "Tentar novamente",
+  });
+}
+
+function successText(text: string) {
+  return Swal.fire({
+    icon: "success",
+    title: "Muito bem!",
+    text: text,
+    confirmButtonText: "Continuar",
+  });
 }
