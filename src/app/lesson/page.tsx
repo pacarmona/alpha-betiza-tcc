@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
+import { Volume2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -30,6 +31,7 @@ export default function Lesson() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
+  const [isReading, setIsReading] = useState(false);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -201,6 +203,26 @@ export default function Lesson() {
     }
   };
 
+  const readText = (text: string) => {
+    if ("speechSynthesis" in window) {
+      if (isReading) {
+        window.speechSynthesis.cancel();
+        setIsReading(false);
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "pt-BR";
+
+      utterance.onend = () => {
+        setIsReading(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+      setIsReading(true);
+    }
+  };
+
   return (
     <div className="w-full flex flex-col h-full">
       <TopBar />
@@ -244,9 +266,21 @@ export default function Lesson() {
                   <h2 className="text-lg font-bold">
                     {selectedQuestion.title}
                   </h2>
-                  <p className="text-sm text-gray-600">
-                    {selectedQuestion.description}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-gray-600">
+                      {selectedQuestion.description}
+                    </p>
+                    <button
+                      onClick={() => readText(selectedQuestion.description)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <Volume2
+                        className={`w-5 h-5 ${
+                          isReading ? "text-blue-500" : "text-gray-500"
+                        }`}
+                      />
+                    </button>
+                  </div>
 
                   <div className="mt-4">
                     <h3 className="text-md font-semibold">Respostas:</h3>
