@@ -101,8 +101,41 @@ export default function Lesson() {
     }, 1000);
 
     const handleMouseClick = () => {
-      if (isScanningActive) {
+      if (isScanningActive && highlightedAnswer) {
         setSelectedAnswer(highlightedAnswer);
+        const selectedAnswer = answers.find(
+          (answer) => answer.id === highlightedAnswer
+        );
+
+        if (selectedAnswer) {
+          if (selectedAnswer.is_correct) {
+            successText("Resposta correta!").then(() => {
+              const currentIndex = questions.findIndex(
+                (q) => q.id === selectedQuestion?.id
+              );
+              if (currentIndex < questions.length - 1) {
+                setSelectedQuestion(questions[currentIndex + 1]);
+                setSelectedAnswer(null);
+                setHighlightedAnswer(null);
+              } else {
+                Swal.fire({
+                  icon: "success",
+                  title: "Parabéns!",
+                  text: "Você completou todas as questões!",
+                  confirmButtonText: "Continuar",
+                }).then(() => {
+                  Swal.close();
+                  router.push("/");
+                });
+              }
+            });
+          } else {
+            errorText("Resposta incorreta. Tente novamente!").then(() => {
+              setSelectedAnswer(null);
+              setHighlightedAnswer(null);
+            });
+          }
+        }
         clearInterval(intervalId);
       }
     };
@@ -113,7 +146,14 @@ export default function Lesson() {
       clearInterval(intervalId);
       document.removeEventListener("click", handleMouseClick);
     };
-  }, [answers, highlightedAnswer, isScanningActive]);
+  }, [
+    answers,
+    highlightedAnswer,
+    isScanningActive,
+    questions,
+    selectedQuestion,
+    router,
+  ]);
 
   const handleAnswerSelection = (selectedAnswerId: string) => {
     if (!isScanningActive) {
@@ -126,6 +166,39 @@ export default function Lesson() {
           selected: answer.id === selectedAnswerId,
         })) || []
     );
+
+    const selectedAnswer = answers.find(
+      (answer) => answer.id === selectedAnswerId
+    );
+    if (selectedAnswer) {
+      if (selectedAnswer.is_correct) {
+        successText("Resposta correta!").then(() => {
+          const currentIndex = questions.findIndex(
+            (q) => q.id === selectedQuestion?.id
+          );
+          if (currentIndex < questions.length - 1) {
+            setSelectedQuestion(questions[currentIndex + 1]);
+            setSelectedAnswer(null);
+            setHighlightedAnswer(null);
+          } else {
+            Swal.fire({
+              icon: "success",
+              title: "Parabéns!",
+              text: "Você completou todas as questões!",
+              confirmButtonText: "Continuar",
+            }).then(() => {
+              Swal.close();
+              router.push("/");
+            });
+          }
+        });
+      } else {
+        errorText("Resposta incorreta. Tente novamente!").then(() => {
+          setSelectedAnswer(null);
+          setHighlightedAnswer(null);
+        });
+      }
+    }
   };
 
   return (
