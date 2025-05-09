@@ -475,6 +475,31 @@ export default function NewLesson() {
         <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
           {/* Título da questão */}
           <div className="bg-white w-4/5">
+            <div className="flex justify-end mb-4">
+              <Button
+                className={`w-40 ${
+                  questions.length > 0 && lessonId
+                    ? "bg-[#53A85C] hover:bg-[#72c177]"
+                    : "bg-[#B6B8BF] hover:bg-[#8f9197]"
+                }`}
+                onClick={() => {
+                  if (lessonId) {
+                    router.push(`/lesson?lessonId=${lessonId}`);
+                  } else {
+                    errorText(
+                      "Erro ao navegar para a atividade. ID da atividade não encontrado."
+                    );
+                  }
+                }}
+                disabled={questions.length === 0 || !lessonId}
+              >
+                {!lessonId
+                  ? "Erro: ID da atividade não encontrado"
+                  : questions.length > 0
+                  ? "Ir para atividade"
+                  : "Adicione pelo menos uma questão"}
+              </Button>
+            </div>
             <Label htmlFor="questionTitle">Título da questão</Label>
             <Input
               id="questionTitle"
