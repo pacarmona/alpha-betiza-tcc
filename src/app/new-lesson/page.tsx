@@ -389,7 +389,12 @@ export default function NewLesson() {
           />
         );
       case "Visual":
-        return <QuestionVisual />;
+        return (
+          <QuestionVisual
+            description={description}
+            setDescription={setDescription}
+          />
+        );
       case "Auditivo":
         return <div>Componente Auditivo (a ser implementado)</div>;
       default:
