@@ -31,7 +31,7 @@ export default function Lesson() {
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
-  const [isReading, setIsReading] = useState(false);
+  const [isReading, setIsReading] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -100,6 +100,7 @@ export default function Lesson() {
       const nextIndex = (currentIndex + 1) % answers.length;
 
       setHighlightedAnswer(answers[nextIndex].id);
+      readText(answers[nextIndex].text, answers[nextIndex].id);
     }, 1000);
 
     const handleMouseClick = () => {
@@ -203,23 +204,28 @@ export default function Lesson() {
     }
   };
 
-  const readText = (text: string) => {
+  const readText = (text: string, answerId: string) => {
     if ("speechSynthesis" in window) {
-      if (isReading) {
-        window.speechSynthesis.cancel();
-        setIsReading(false);
-        return;
-      }
+      window.speechSynthesis.cancel();
+
+      const newReadingState = { ...isReading };
+      Object.keys(newReadingState).forEach((key) => {
+        newReadingState[key] = false;
+      });
+      newReadingState[answerId] = true;
+      setIsReading(newReadingState);
 
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "pt-BR";
 
       utterance.onend = () => {
-        setIsReading(false);
+        setIsReading((prev) => ({
+          ...prev,
+          [answerId]: false,
+        }));
       };
 
       window.speechSynthesis.speak(utterance);
-      setIsReading(true);
     }
   };
 
@@ -271,12 +277,19 @@ export default function Lesson() {
                       {selectedQuestion.description}
                     </p>
                     <button
-                      onClick={() => readText(selectedQuestion.description)}
+                      onClick={() =>
+                        readText(
+                          selectedQuestion.description,
+                          selectedQuestion.id
+                        )
+                      }
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     >
                       <Volume2
                         className={`w-5 h-5 ${
-                          isReading ? "text-blue-500" : "text-gray-500"
+                          isReading[selectedQuestion.id]
+                            ? "text-blue-500"
+                            : "text-gray-500"
                         }`}
                       />
                     </button>
@@ -309,7 +322,24 @@ export default function Lesson() {
                           }`}
                           onClick={() => handleAnswerSelection(answer.id)}
                         >
-                          <p className="text-sm">{answer.text}</p>
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm">{answer.text}</p>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                readText(answer.text, answer.id);
+                              }}
+                              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                            >
+                              <Volume2
+                                className={`w-5 h-5 ${
+                                  isReading[answer.id]
+                                    ? "text-blue-500"
+                                    : "text-gray-500"
+                                }`}
+                              />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ))}
