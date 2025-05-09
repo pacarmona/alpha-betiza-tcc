@@ -101,7 +101,7 @@ export default function Lesson() {
 
       setHighlightedAnswer(answers[nextIndex].id);
       readText(answers[nextIndex].text, answers[nextIndex].id);
-    }, 1000);
+    }, 2000);
 
     const handleMouseClick = () => {
       if (isScanningActive && highlightedAnswer) {
