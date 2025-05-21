@@ -1,18 +1,14 @@
 "use client";
 import BottomBar from "@/components/bottomBar";
 import TopBar from "@/components/topBar";
-import TypeAnswers from "@/components/typeAnswers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
-import TypeQuestion from "../../components/typeQuestion";
 import QuestionText from "./questionText";
-import QuestionVisual from "./questionVisual";
 import TextResponseType from "./textResponseType";
-import VisualResponseType from "./visualResponseType";
 
 interface Question {
   id: string;
@@ -388,15 +384,7 @@ export default function NewLesson() {
             setDescription={setDescription}
           />
         );
-      case "Visual":
-        return (
-          <QuestionVisual
-            description={description}
-            setDescription={setDescription}
-          />
-        );
-      case "Auditivo":
-        return <div>Componente Auditivo (a ser implementado)</div>;
+
       default:
         return null;
     }
@@ -413,10 +401,7 @@ export default function NewLesson() {
             initialCorrectAnswer={correctAnswerId}
           />
         );
-      case "Visual":
-        return <VisualResponseType />;
-      case "Auditivo":
-        return <div>Componente Auditivo (a ser implementado)</div>;
+
       default:
         return null;
     }
@@ -484,7 +469,7 @@ export default function NewLesson() {
               <Button
                 className={`w-40 ${
                   questions.length > 0 && lessonId
-                    ? "bg-[#53A85C] hover:bg-[#72c177]"
+                    ? "bg-blue-500 hover:bg-blue-400"
                     : "bg-[#B6B8BF] hover:bg-[#8f9197]"
                 }`}
                 onClick={() => {
@@ -518,12 +503,12 @@ export default function NewLesson() {
           </div>
 
           {/* Botões para escolher o tipo da questão */}
-          <Label htmlFor="questionType">Tipo da questão</Label>
+          {/* <Label htmlFor="questionType">Tipo da questão</Label>
           <TypeQuestion
             selectedQuestionType={selectedQuestionType}
             setSelectedQuestionType={setSelectedQuestionType}
             disabled={isFormDisabled}
-          />
+          /> */}
 
           {/* Renderiza o tipo de questão escolhido */}
           {renderQuestionType()}
@@ -534,11 +519,11 @@ export default function NewLesson() {
               <p>Respostas</p>
             </div>
             {/* Botões para escolher o tipo da resposta */}
-            <TypeAnswers
+            {/* <TypeAnswers
               selectedAnswersType={selectedAnswersType}
               setSelectedResponseType={setSelectedAnswersType}
               disabled={isFormDisabled}
-            />
+            /> */}
 
             {/* Espaçamento de 5 entre o tipo de resposta e o conteúdo renderizado */}
             <div className="mt-5">
@@ -552,14 +537,14 @@ export default function NewLesson() {
             <div>
               {selectedQuestionId && (
                 <Button
-                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                  className="bg-blue-500  text-white font-bold py-2 px-4 rounded w-40 hover:bg-blue-400"
                   onClick={handleAddNewQuestion}
                 >
                   {isCreatingNew ? "Salvar" : "Adicionar Questão"}
                 </Button>
               )}
             </div>
-            <div className="flex gap-4">
+            <div className="flex gap-2 justify-end items-end">
               <Button
                 className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400"
                 onClick={() => router.back()}
