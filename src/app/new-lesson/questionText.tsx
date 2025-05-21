@@ -1,4 +1,6 @@
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import React, { useState } from "react";
 
 const TextareaBlock = ({
   value,
@@ -27,8 +29,28 @@ export default function QuestionText({
   description: string;
   setDescription: (description: string) => void;
 }) {
+  const [showInput, setShowInput] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
+  };
+
+  const toggleInput = () => {
+    if (showInput && file) {
+      const confirmed = confirm(
+        "Tem certeza que deseja remover a imagem selecionada?"
+      );
+      if (!confirmed) return;
+      setFile(null);
+    }
+    setShowInput(!showInput);
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setFile(e.target.files[0]);
+    }
   };
 
   return (
@@ -39,6 +61,25 @@ export default function QuestionText({
         value={description}
         onChange={handleChange}
       />
+
+      <div>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            toggleInput();
+          }}
+          className="text-blue-600 hover:underline"
+        >
+          {showInput ? "Remover imagem" : "Adicionar imagem"}
+        </a>
+
+        {showInput && (
+          <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
+            <Input id="picture" type="file" onChange={handleFileChange} />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
