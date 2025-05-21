@@ -48,6 +48,7 @@ model Question {
   Lesson      Lesson       @relation(fields: [lessonId], references: [id])
   lessonId    String
   Answers     Answer[]
+  image_url   String?
 }
 
 model Answer {

@@ -306,6 +306,13 @@ export default function Lesson() {
                     <p className="text-sm text-gray-600">
                       {selectedQuestion.description}
                     </p>
+                    {selectedQuestion.image_url && (
+                      <img
+                        src={selectedQuestion.image_url}
+                        alt="Imagem da questão"
+                        className="max-w-full h-auto rounded mt-2"
+                      />
+                    )}
                     <button
                       onClick={() =>
                         readText(

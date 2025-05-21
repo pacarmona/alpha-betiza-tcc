@@ -5,7 +5,7 @@ import { NextResponse } from "next/server";
 const prisma = new PrismaClient();
 
 export async function POST(req: Request) {
-  const { lessonId, title, questionType, answerType, description } =
+  const { lessonId, title, questionType, answerType, description, imageUrl } =
     await req.json();
 
   try {
@@ -16,6 +16,7 @@ export async function POST(req: Request) {
         type: questionType,
         answer_type: answerType,
         description: description,
+        image_url: imageUrl,
       },
     });
 

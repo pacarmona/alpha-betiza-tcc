@@ -1,6 +1,8 @@
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import React, { useState } from "react";
+import { PutBlobResult } from "@vercel/blob";
+import React, { useRef, useState } from "react";
 
 const TextareaBlock = ({
   value,
@@ -25,12 +27,17 @@ const TextareaBlock = ({
 export default function QuestionText({
   description,
   setDescription,
+  setImageURL,
 }: {
   description: string;
   setDescription: (description: string) => void;
+  setImageURL: (image: string) => void;
 }) {
   const [showInput, setShowInput] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+
+  const inputFileRef = useRef<HTMLInputElement>(null);
+  const [blob, setBlob] = useState<PutBlobResult | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
@@ -53,6 +60,27 @@ export default function QuestionText({
     }
   };
 
+  const upload = async (event: any) => {
+    event.preventDefault();
+
+    if (!inputFileRef.current?.files) {
+      throw new Error("No file selected");
+    }
+
+    const file = inputFileRef.current.files[0];
+
+    const response = await fetch(`/api/upload?filename=${file.name}`, {
+      method: "POST",
+      body: file,
+    });
+    console.log("response", response);
+
+    const newBlob = (await response.json()) as PutBlobResult;
+
+    setBlob(newBlob);
+    setImageURL(newBlob.url);
+  };
+
   return (
     <div>
       <Label htmlFor="description">Descrição</Label>
@@ -73,10 +101,25 @@ export default function QuestionText({
         >
           {showInput ? "Remover imagem" : "Adicionar imagem"}
         </a>
-
         {showInput && (
           <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-            <Input id="picture" type="file" onChange={handleFileChange} />
+            <Input
+              id="picture"
+              type="file"
+              onChange={handleFileChange}
+              ref={inputFileRef}
+            />
+            <Button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={upload}
+            >
+              enviar
+            </Button>
+          </div>
+        )}{" "}
+        {blob && (
+          <div>
+            Blob url: <a href={blob.url}>{blob.url}</a>
           </div>
         )}
       </div>

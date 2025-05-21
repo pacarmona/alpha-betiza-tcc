@@ -49,7 +49,7 @@ export default function NewLesson() {
   });
 
   const [description, setDescription] = useState<string>("");
-
+  const [imageURL, setImageURL] = useState<string>("");
   const [selectedQuestionType, setSelectedQuestionType] =
     useState<string>("Textual");
   const [selectedAnswersType, setSelectedAnswersType] =
@@ -272,6 +272,7 @@ export default function NewLesson() {
 
       if (selectedQuestionId) {
         // Atualizar questão existente
+        console.log(imageURL);
         response = await fetch(`/api/question/${selectedQuestionId}`, {
           method: "PUT",
           headers: {
@@ -282,6 +283,7 @@ export default function NewLesson() {
             questionType: questionType,
             answerType: answerType,
             description: description,
+            imageUrl: imageURL,
           }),
         });
 
@@ -294,6 +296,7 @@ export default function NewLesson() {
         SuccessText(result.message);
       } else {
         // Criar nova questão
+        console.log(imageURL);
         response = await fetch(`/api/question`, {
           method: "POST",
           headers: {
@@ -305,6 +308,7 @@ export default function NewLesson() {
             questionType: questionType,
             answerType: answerType,
             description: description,
+            imageUrl: imageURL,
           }),
         });
 
@@ -382,6 +386,7 @@ export default function NewLesson() {
           <QuestionText
             description={description}
             setDescription={setDescription}
+            setImageURL={setImageURL}
           />
         );
 

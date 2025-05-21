@@ -74,7 +74,7 @@ export async function PUT(
 ) {
   try {
     const body = await request.json();
-    const { title, questionType, answerType, description } = body;
+    const { title, questionType, answerType, description, imageUrl } = body;
 
     // Atualizar a questão
     const updatedQuestion = await prisma.question.update({
@@ -84,6 +84,7 @@ export async function PUT(
         type: questionType,
         answer_type: answerType,
         description,
+        image_url: imageUrl,
       },
     });
 
