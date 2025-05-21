@@ -45,12 +45,6 @@ export default function TypeAnswers({
         onClick={() => setSelectedResponseType("Visual")}
         disabled={disabled}
       />
-      <AnswerButton
-        label="Auditivo"
-        selected={selectedAnswersType === "Auditivo"}
-        onClick={() => setSelectedResponseType("Auditivo")}
-        disabled={disabled}
-      />
     </div>
   );
 }

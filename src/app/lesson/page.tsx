@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
-import { Volume2 } from "lucide-react";
+import { Sliders, Volume2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
@@ -21,17 +21,19 @@ export default function Lesson() {
   const lessonId = searchParams.get("lessonId");
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isScanningActive, setIsScanningActive] = useState(true);
-
+  const [isScanningActive, setIsScanningActive] = useState(false);
+  const [isDescriptionAudioPlayed, setIsDescriptionAudioPlayed] =
+    useState(false);
   const [highlightedAnswer, setHighlightedAnswer] = useState<string | null>(
     null
   );
-  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null); // Resposta selecionada
+  const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [answers, setAnswers] = useState<Answer[]>([]);
   const [selectedQuestion, setSelectedQuestion] = useState<Question | null>(
     null
   );
   const [isReading, setIsReading] = useState<{ [key: string]: boolean }>({});
+  const [scanInterval, setScanInterval] = useState<number>(2000); // Default to 2 seconds
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -53,9 +55,11 @@ export default function Lesson() {
 
     fetchQuestions();
   }, [lessonId]);
+
   const handleQuestionSelection = (question: Question) => {
     setSelectedQuestion(question);
   };
+
   useEffect(() => {
     if (questions.length === 0) return;
 
@@ -101,17 +105,17 @@ export default function Lesson() {
 
       setHighlightedAnswer(answers[nextIndex].id);
       readText(answers[nextIndex].text, answers[nextIndex].id);
-    }, 2000);
+    }, scanInterval);
 
     const handleMouseClick = () => {
       if (isScanningActive && highlightedAnswer) {
         setSelectedAnswer(highlightedAnswer);
-        const selectedAnswer = answers.find(
+        const selectedAnswerObj = answers.find(
           (answer) => answer.id === highlightedAnswer
         );
 
-        if (selectedAnswer) {
-          if (selectedAnswer.is_correct) {
+        if (selectedAnswerObj) {
+          if (selectedAnswerObj.is_correct) {
             successText("Resposta correta!").then(() => {
               const currentIndex = questions.findIndex(
                 (q) => q.id === selectedQuestion?.id
@@ -127,7 +131,6 @@ export default function Lesson() {
                   text: "Você completou todas as questões!",
                   confirmButtonText: "Continuar",
                 }).then(() => {
-                  Swal.close();
                   router.push("/");
                 });
               }
@@ -156,25 +159,25 @@ export default function Lesson() {
     questions,
     selectedQuestion,
     router,
+    scanInterval,
   ]);
 
   const handleAnswerSelection = (selectedAnswerId: string) => {
     if (!isScanningActive) {
       setSelectedAnswer(selectedAnswerId);
     }
-    setAnswers(
-      (prevAnswers) =>
-        prevAnswers?.map((answer) => ({
-          ...answer,
-          selected: answer.id === selectedAnswerId,
-        })) || []
+    setAnswers((prevAnswers) =>
+      prevAnswers.map((answer) => ({
+        ...answer,
+        selected: answer.id === selectedAnswerId,
+      }))
     );
 
-    const selectedAnswer = answers.find(
+    const selectedAnswerObj = answers.find(
       (answer) => answer.id === selectedAnswerId
     );
-    if (selectedAnswer) {
-      if (selectedAnswer.is_correct) {
+    if (selectedAnswerObj) {
+      if (selectedAnswerObj.is_correct) {
         successText("Resposta correta!").then(() => {
           const currentIndex = questions.findIndex(
             (q) => q.id === selectedQuestion?.id
@@ -190,7 +193,6 @@ export default function Lesson() {
               text: "Você completou todas as questões!",
               confirmButtonText: "Continuar",
             }).then(() => {
-              Swal.close();
               router.push("/");
             });
           }
@@ -215,6 +217,10 @@ export default function Lesson() {
       newReadingState[answerId] = true;
       setIsReading(newReadingState);
 
+      if (selectedQuestion && answerId === selectedQuestion.id) {
+        setIsDescriptionAudioPlayed(true);
+      }
+
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = "pt-BR";
 
@@ -229,40 +235,64 @@ export default function Lesson() {
     }
   };
 
+  const handleScanIntervalChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setScanInterval(Number(event.target.value));
+  };
+
   return (
     <div className="w-full flex flex-col h-full">
       <TopBar />
-
       <div className="w-full h-full flex">
-        <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
-          <div className="flex items-center space-x-2 mb-4">
-            <Switch
-              id="scanning-mode"
-              checked={isScanningActive}
-              onCheckedChange={setIsScanningActive}
-            />
-            <Label htmlFor="scanning-mode">Varredura de Tela</Label>
+        <div className="flex flex-col gap-4 w-[85%] ml-10 mt-10">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex flex-wrap gap-2">
+              {questions.map((question, index) => (
+                <Button
+                  key={question.id}
+                  className={`font-bold py-2 px-4 rounded ${
+                    selectedQuestion?.id === question.id
+                      ? "bg-blue-700 text-white"
+                      : "bg-blue-500 text-white hover:bg-blue-400"
+                  }`}
+                  onClick={() => handleQuestionSelection(question)}
+                >
+                  Questão {index + 1}
+                </Button>
+              ))}
+            </div>
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <Sliders className="w-5 h-5 text-gray-500" />
+                <Label htmlFor="scan-interval">Tempo de Varredura:</Label>
+                <select
+                  id="scan-interval"
+                  value={scanInterval}
+                  onChange={handleScanIntervalChange}
+                  className="border rounded p-1 text-sm bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value={2000}>Tempo de Varredura: 2s</option>
+                  <option value={4000}>Tempo de Varredura: 4s</option>
+                  <option value={6000}>Tempo de Varredura: 6s</option>
+                </select>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  id="scanning-mode"
+                  checked={isScanningActive}
+                  onCheckedChange={setIsScanningActive}
+                  disabled={!isDescriptionAudioPlayed}
+                />
+                <Label htmlFor="scanning-mode">Varredura de Tela</Label>
+              </div>
+            </div>
           </div>
 
           {loading ? (
             <p>Carregando questões...</p>
           ) : questions.length > 0 ? (
             <div>
-              <div className="mb-4">
-                {questions.map((question, index) => (
-                  <Button
-                    key={question.id}
-                    className={`font-bold py-2 px-4 rounded mb-2 mr-1 ${
-                      selectedQuestion?.id === question.id
-                        ? "bg-blue-700 text-white"
-                        : "bg-blue-500 text-white hover:bg-blue-400"
-                    }`}
-                    onClick={() => handleQuestionSelection(question)}
-                  >
-                    {"Questão " + (index + 1)}
-                  </Button>
-                ))}
-              </div>
               {selectedQuestion && (
                 <div className="border p-4 rounded shadow-md bg-white w-full">
                   <p className="text-sm text-gray-500 mt-2">
@@ -297,7 +327,7 @@ export default function Lesson() {
 
                   <div className="mt-4">
                     <h3 className="text-md font-semibold">Respostas:</h3>
-                    {answers?.map((answer, index) => (
+                    {answers.map((answer, index) => (
                       <div
                         key={answer.id}
                         className="flex flex-col items-start mt-4"
@@ -371,6 +401,7 @@ export default function Lesson() {
     </div>
   );
 }
+
 function errorText(error: string) {
   return Swal.fire({
     icon: "error",

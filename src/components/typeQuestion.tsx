@@ -45,12 +45,6 @@ export default function TypeQuestion({
         onClick={() => setSelectedQuestionType("Visual")}
         disabled={disabled}
       />
-      <TypeButton
-        label="Auditivo"
-        selected={selectedQuestionType === "Auditivo"}
-        onClick={() => setSelectedQuestionType("Auditivo")}
-        disabled={disabled}
-      />
     </div>
   );
 }
