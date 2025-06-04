@@ -1,6 +1,5 @@
 "use client";
 
-import BottomBar from "@/components/bottomBar";
 import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -404,7 +403,6 @@ export default function Lesson() {
           </div>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }

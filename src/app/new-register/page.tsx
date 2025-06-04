@@ -1,5 +1,4 @@
 "use client";
-import BottomBar from "@/components/bottomBar";
 import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -276,7 +275,6 @@ export default function NewRegister() {
           </div>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }
