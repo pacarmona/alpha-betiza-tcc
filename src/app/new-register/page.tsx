@@ -141,7 +141,7 @@ export default function NewRegister() {
         confirmButtonText: "OK",
       }).then(() => {
         // Redireciona o usuário após fechar o modal
-        router.push("/authenticate"); // Redireciona para a tela de autenticação
+        router.push("/login"); // Redireciona para a tela de autenticação
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
