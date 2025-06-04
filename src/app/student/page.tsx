@@ -1,4 +1,5 @@
 "use client";
+import BottomBar from "@/components/bottomBar";
 import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import {
@@ -67,6 +68,7 @@ export default function Home() {
         </div>
       </div>
       {/* Barra superior */}
+      <BottomBar />
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="relative bg-white p-6 rounded-lg shadow-lg">
