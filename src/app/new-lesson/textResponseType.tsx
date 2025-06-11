@@ -116,12 +116,15 @@ export default function TextResponseType({
     text04: useRef<HTMLInputElement>(null),
   };
 
+  // Verifica se existem imagens nas alternativas
+  const hasImages = Object.values(imageUrls).some((url) => url !== "");
+
   useEffect(() => {
     if (initialAnswers) {
       setResponses(initialAnswers);
     }
     if (initialAnswerImages) {
-      setImageUrls(initialAnswerImages);
+      setImageUrls(initialAnswerImages as { [key in AnswerKey]: string });
     }
     if (initialCorrectAnswer !== undefined) {
       setCorrectAnswerId(initialCorrectAnswer);
@@ -146,17 +149,27 @@ export default function TextResponseType({
   };
 
   const toggleAllInputs = () => {
-    if (showAllInputs && Object.values(files).some((file) => file !== null)) {
+    if (hasImages) {
       const confirmed = window.confirm(
-        "Tem certeza que deseja remover todas as imagens selecionadas?"
+        "Tem certeza que deseja remover todas as imagens das alternativas?"
       );
       if (!confirmed) return;
-      setFiles({ text01: null, text02: null, text03: null, text04: null });
+
+      // Limpar todas as imagens
+      const emptyImages: { [key in AnswerKey]: string } = {
+        text01: "",
+        text02: "",
+        text03: "",
+        text04: "",
+      };
+
       setBlobs({ text01: null, text02: null, text03: null, text04: null });
-      setImageUrls({ text01: "", text02: "", text03: "", text04: "" });
-      saveAnswerImages({ text01: "", text02: "", text03: "", text04: "" });
+      setImageUrls(emptyImages);
+      saveAnswerImages(emptyImages);
+      setShowAllInputs(false);
+    } else {
+      setShowAllInputs(!showAllInputs);
     }
-    setShowAllInputs(!showAllInputs);
   };
 
   const handleFileChange =
@@ -246,7 +259,7 @@ export default function TextResponseType({
           }}
           className="text-blue-600 hover:underline text-base"
         >
-          {showAllInputs ? "Remover imagens" : "Adicionar imagens"}
+          {hasImages ? "Remover imagens" : "Adicionar imagens"}
         </a>
       </div>
       <div className="text-center flex gap-4 mb-2">
