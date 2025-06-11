@@ -58,6 +58,7 @@ model Answer {
   text       String
   type       QuestionType
   is_correct Boolean
+  image_url  String?
   Question   Question     @relation(fields: [questionId], references: [id])
   questionId String
 }

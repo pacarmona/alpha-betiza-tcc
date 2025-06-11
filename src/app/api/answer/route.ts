@@ -11,7 +11,10 @@ export async function POST(request: Request) {
 
     // Criar as respostas
     await prisma.answer.createMany({
-      data: answers,
+      data: answers.map((answer: any) => ({
+        ...answer,
+        image_url: answer.image_url || null,
+      })),
     });
 
     return NextResponse.json(
@@ -39,7 +42,10 @@ export async function PUT(request: Request) {
 
     // Depois, criar as novas respostas
     await prisma.answer.createMany({
-      data: answers,
+      data: answers.map((answer: any) => ({
+        ...answer,
+        image_url: answer.image_url || null,
+      })),
     });
 
     return NextResponse.json(

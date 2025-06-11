@@ -1,23 +1,53 @@
 import InputBlock from "@/components/inputBlock";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { useEffect, useState } from "react";
+import { PutBlobResult } from "@vercel/blob";
+import { useEffect, useRef, useState } from "react";
+
+type AnswerKey = "text01" | "text02" | "text03" | "text04";
 
 // Componente reutilizável para o toggle de upload de imagem
 const ImageUpload = ({
   showInput,
   handleFileChange,
   inputId,
+  inputRef,
+  onUpload,
+  blob,
 }: {
   showInput: boolean;
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   inputId: string;
+  inputRef: React.RefObject<HTMLInputElement>;
+  onUpload: (event: React.MouseEvent<HTMLButtonElement>) => void;
+  blob: PutBlobResult | null;
 }) => (
   <>
     {showInput && (
       <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
-        <Input id={inputId} type="file" onChange={handleFileChange} />
+        <Input
+          id={inputId}
+          type="file"
+          onChange={handleFileChange}
+          ref={inputRef}
+        />
+        <Button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={onUpload}
+        >
+          Enviar
+        </Button>
+        {blob && (
+          <div className="mt-2">
+            <img
+              src={blob.url}
+              alt="Imagem enviada"
+              className="max-w-full h-auto"
+            />
+          </div>
+        )}
       </div>
     )}
   </>
@@ -26,16 +56,29 @@ const ImageUpload = ({
 export default function TextResponseType({
   saveCorrectAnswerId,
   saveResponseLesson,
+  saveAnswerImages,
   initialAnswers,
+  initialAnswerImages,
   initialCorrectAnswer,
 }: {
   saveCorrectAnswerId: (correctAnswerId: string | null) => void;
   saveResponseLesson: (responseLesson: { [key: string]: string }) => void;
+  saveAnswerImages: (images: { [key: string]: string }) => void;
   initialAnswers?: { [key: string]: string };
+  initialAnswerImages?: { [key: string]: string };
   initialCorrectAnswer?: string | null;
 }) {
   const [responseLesson, setResponses] = useState<{ [key: string]: string }>(
     initialAnswers || {
+      text01: "",
+      text02: "",
+      text03: "",
+      text04: "",
+    }
+  );
+
+  const [imageUrls, setImageUrls] = useState<{ [key in AnswerKey]: string }>(
+    initialAnswerImages || {
       text01: "",
       text02: "",
       text03: "",
@@ -50,22 +93,46 @@ export default function TextResponseType({
   // Estado unificado para gerenciar a exibição de todos os inputs de imagem
   const [showAllInputs, setShowAllInputs] = useState(false);
 
-  const [files, setFiles] = useState<{ [key: string]: File | null }>({
+  const [files, setFiles] = useState<{ [key in AnswerKey]: File | null }>({
     text01: null,
     text02: null,
     text03: null,
     text04: null,
   });
 
+  const [blobs, setBlobs] = useState<{
+    [key in AnswerKey]: PutBlobResult | null;
+  }>({
+    text01: null,
+    text02: null,
+    text03: null,
+    text04: null,
+  });
+
+  const inputRefs: { [key in AnswerKey]: React.RefObject<HTMLInputElement> } = {
+    text01: useRef<HTMLInputElement>(null),
+    text02: useRef<HTMLInputElement>(null),
+    text03: useRef<HTMLInputElement>(null),
+    text04: useRef<HTMLInputElement>(null),
+  };
+
   useEffect(() => {
     if (initialAnswers) {
       setResponses(initialAnswers);
+    }
+    if (initialAnswerImages) {
+      setImageUrls(initialAnswerImages);
     }
     if (initialCorrectAnswer !== undefined) {
       setCorrectAnswerId(initialCorrectAnswer);
       saveCorrectAnswerId(initialCorrectAnswer);
     }
-  }, [initialAnswers, initialCorrectAnswer, saveCorrectAnswerId]);
+  }, [
+    initialAnswers,
+    initialAnswerImages,
+    initialCorrectAnswer,
+    saveCorrectAnswerId,
+  ]);
 
   const handleChange = (key: string) => (value: string) => {
     const newResponses = { ...responseLesson, [key]: value };
@@ -85,18 +152,51 @@ export default function TextResponseType({
       );
       if (!confirmed) return;
       setFiles({ text01: null, text02: null, text03: null, text04: null });
+      setBlobs({ text01: null, text02: null, text03: null, text04: null });
+      setImageUrls({ text01: "", text02: "", text03: "", text04: "" });
+      saveAnswerImages({ text01: "", text02: "", text03: "", text04: "" });
     }
     setShowAllInputs(!showAllInputs);
   };
 
   const handleFileChange =
-    (key: keyof typeof files) => (e: React.ChangeEvent<HTMLInputElement>) => {
+    (key: AnswerKey) => (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0] || null;
       setFiles((prev) => ({ ...prev, [key]: file }));
     };
 
+  const handleUpload =
+    (key: AnswerKey) => async (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+
+      if (!inputRefs[key].current?.files) {
+        throw new Error("Nenhum arquivo selecionado");
+      }
+
+      const file = inputRefs[key].current.files[0];
+
+      try {
+        const response = await fetch(`/api/upload?filename=${file.name}`, {
+          method: "POST",
+          body: file,
+        });
+
+        if (!response.ok) {
+          throw new Error("Erro ao fazer upload do arquivo");
+        }
+
+        const newBlob = (await response.json()) as PutBlobResult;
+        setBlobs((prev) => ({ ...prev, [key]: newBlob }));
+        setImageUrls((prev) => ({ ...prev, [key]: newBlob.url }));
+        saveAnswerImages({ ...imageUrls, [key]: newBlob.url });
+      } catch (error) {
+        console.error("Erro no upload:", error);
+        alert("Erro ao fazer upload da imagem");
+      }
+    };
+
   // Função para renderizar cada resposta
-  const renderAnswer = (key: string, label: string) => (
+  const renderAnswer = (key: AnswerKey, label: string) => (
     <div className="flex flex-col items-start">
       <Label className="mb-2" htmlFor={key}>
         {label}
@@ -111,7 +211,19 @@ export default function TextResponseType({
         showInput={showAllInputs}
         handleFileChange={handleFileChange(key)}
         inputId={`picture-${key}`}
+        inputRef={inputRefs[key]}
+        onUpload={handleUpload(key)}
+        blob={blobs[key]}
       />
+      {imageUrls[key] && !blobs[key] && (
+        <div className="mt-2">
+          <img
+            src={imageUrls[key]}
+            alt="Imagem da resposta"
+            className="max-w-full h-auto"
+          />
+        </div>
+      )}
       <div className="flex items-center space-x-2 mt-2">
         <Switch
           id={`${key}-a`}

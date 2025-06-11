@@ -454,7 +454,16 @@ export default function Lesson() {
                           onClick={() => handleAnswerSelection(answer.id)}
                         >
                           <div className="flex items-center justify-between">
-                            <p className="text-sm">{answer.text}</p>
+                            <div className="flex flex-col gap-2">
+                              <p className="text-sm">{answer.text}</p>
+                              {answer.image_url && (
+                                <img
+                                  src={answer.image_url}
+                                  alt="Imagem da resposta"
+                                  className="max-w-[200px] h-auto rounded"
+                                />
+                              )}
+                            </div>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();

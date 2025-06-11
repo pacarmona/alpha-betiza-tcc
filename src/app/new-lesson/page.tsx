@@ -25,6 +25,7 @@ interface Answer {
   type: string;
   is_correct: boolean;
   questionId: string;
+  image_url?: string;
 }
 
 export default function NewLesson() {
@@ -64,6 +65,15 @@ export default function NewLesson() {
     text04: "",
   });
 
+  const [answerImages, setAnswerImages] = useState<{
+    [key: string]: string;
+  }>({
+    text01: "",
+    text02: "",
+    text03: "",
+    text04: "",
+  });
+
   const [correctAnswerId, setCorrectAnswerId] = useState<string | null>(
     "text01"
   );
@@ -71,6 +81,11 @@ export default function NewLesson() {
   const saveResponseLesson = (responseLesson: { [key: string]: string }) => {
     setResponseLesson(responseLesson);
   };
+
+  const saveAnswerImages = (images: { [key: string]: string }) => {
+    setAnswerImages(images);
+  };
+
   const saveCorrectAnswerId = (correctAnswerId: string | null) => {
     setCorrectAnswerId(correctAnswerId);
     console.log(correctAnswerId);
@@ -157,6 +172,15 @@ export default function NewLesson() {
       };
       setResponseLesson(responseLesson);
 
+      // Atualizar o estado das imagens das respostas
+      const answerImages: { [key: string]: string } = {
+        text01: questionData.Answers[0]?.image_url || "",
+        text02: questionData.Answers[1]?.image_url || "",
+        text03: questionData.Answers[2]?.image_url || "",
+        text04: questionData.Answers[3]?.image_url || "",
+      };
+      setAnswerImages(answerImages);
+
       // Encontrar a resposta correta
       const correctAnswer = questionData.Answers.find(
         (a: Answer) => a.is_correct
@@ -169,6 +193,7 @@ export default function NewLesson() {
       console.log("Dados carregados:", {
         questionData,
         responseLesson,
+        answerImages,
         correctAnswerId: correctAnswer
           ? `text0${questionData.Answers.indexOf(correctAnswer) + 1}`
           : null,
@@ -212,6 +237,12 @@ export default function NewLesson() {
           setFormData({ questionTitle: "" });
           setDescription("");
           setResponseLesson({
+            text01: "",
+            text02: "",
+            text03: "",
+            text04: "",
+          });
+          setAnswerImages({
             text01: "",
             text02: "",
             text03: "",
@@ -339,6 +370,7 @@ export default function NewLesson() {
             text: value,
             type: answerType,
             is_correct: key === correctAnswerId,
+            image_url: answerImages[key] || null,
           });
         }
 
@@ -366,6 +398,12 @@ export default function NewLesson() {
         setFormData({ questionTitle: "" });
         setDescription("");
         setResponseLesson({
+          text01: "",
+          text02: "",
+          text03: "",
+          text04: "",
+        });
+        setAnswerImages({
           text01: "",
           text02: "",
           text03: "",
@@ -402,7 +440,9 @@ export default function NewLesson() {
           <TextResponseType
             saveCorrectAnswerId={saveCorrectAnswerId}
             saveResponseLesson={saveResponseLesson}
+            saveAnswerImages={saveAnswerImages}
             initialAnswers={responseLesson}
+            initialAnswerImages={answerImages}
             initialCorrectAnswer={correctAnswerId}
           />
         );
@@ -432,23 +472,30 @@ export default function NewLesson() {
         text03: "",
         text04: "",
       });
+      setAnswerImages({
+        text01: "",
+        text02: "",
+        text03: "",
+        text04: "",
+      });
       setCorrectAnswerId("text01");
     }
   };
 
   return (
-    <div className="w-full flex flex-col h-full">
+    <div className="w-full flex flex-col min-h-screen">
       {/* Barra superior */}
       <TopBar />
 
-      {/* Barra lateral */}
-      <div className="w-full h-full flex">
-        <div className="bg-[#D9D9D9] h-full w-[15%]">
-          <div className="flex flex-col items-center gap-2 pt-4">
+      {/* Conteúdo principal */}
+      <div className="w-full flex flex-col lg:flex-row flex-grow">
+        {/* Barra lateral */}
+        <div className="bg-[#D9D9D9] w-full lg:w-[15%] p-4">
+          <div className="flex flex-wrap lg:flex-col items-center gap-2">
             {questions.map((question) => (
-              <div key={question.id} className="flex items-center gap-2">
+              <div key={question.id} className="flex items-center gap-2 mb-2">
                 <Button
-                  className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#8f9197] ${
+                  className={`bg-[#B6B8BF] text-white font-bold py-2 px-4 rounded w-full lg:w-40 hover:bg-[#8f9197] ${
                     selectedQuestionId === question.id ? "bg-[#53A85C]" : ""
                   }`}
                   onClick={() => handleQuestionClick(question.id)}
@@ -467,12 +514,12 @@ export default function NewLesson() {
         </div>
 
         {/* Conteúdo principal da tela */}
-        <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
+        <div className="flex flex-col gap-4 w-full lg:w-[85%] p-4 lg:p-10">
           {/* Título da questão */}
-          <div className="bg-white w-4/5">
+          <div className="bg-white w-full lg:w-4/5">
             <div className="flex justify-end mb-4">
               <Button
-                className={`w-40 ${
+                className={`w-full lg:w-40 ${
                   questions.length > 0 && lessonId
                     ? "bg-blue-500 hover:bg-blue-400"
                     : "bg-[#B6B8BF] hover:bg-[#8f9197]"
@@ -504,31 +551,18 @@ export default function NewLesson() {
               value={formData.questionTitle}
               onChange={handleChange}
               disabled={isFormDisabled}
+              className="w-full"
             />
           </div>
-
-          {/* Botões para escolher o tipo da questão */}
-          {/* <Label htmlFor="questionType">Tipo da questão</Label>
-          <TypeQuestion
-            selectedQuestionType={selectedQuestionType}
-            setSelectedQuestionType={setSelectedQuestionType}
-            disabled={isFormDisabled}
-          /> */}
 
           {/* Renderiza o tipo de questão escolhido */}
           {renderQuestionType()}
 
           {/* Respostas */}
-          <div>
-            <div className="text-left font-bold text-4xl text-black mb-5">
+          <div className="w-full">
+            <div className="text-left font-bold text-2xl lg:text-4xl text-black mb-5">
               <p>Respostas</p>
             </div>
-            {/* Botões para escolher o tipo da resposta */}
-            {/* <TypeAnswers
-              selectedAnswersType={selectedAnswersType}
-              setSelectedResponseType={setSelectedAnswersType}
-              disabled={isFormDisabled}
-            /> */}
 
             {/* Espaçamento de 5 entre o tipo de resposta e o conteúdo renderizado */}
             <div className="mt-5">
@@ -538,27 +572,27 @@ export default function NewLesson() {
           </div>
 
           {/* Botões para cancelar ou confirmar */}
-          <div className="text-center flex gap-4 justify-between mr-64 mt-10">
-            <div>
+          <div className="flex flex-col lg:flex-row gap-4 justify-between w-full lg:w-auto mt-10">
+            <div className="w-full lg:w-auto">
               {selectedQuestionId && (
                 <Button
-                  className="bg-blue-500  text-white font-bold py-2 px-4 rounded w-40 hover:bg-blue-400"
+                  className="w-full lg:w-40 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-400"
                   onClick={handleAddNewQuestion}
                 >
                   {isCreatingNew ? "Salvar" : "Adicionar Questão"}
                 </Button>
               )}
             </div>
-            <div className="flex gap-2 justify-end items-end">
+            <div className="flex flex-col lg:flex-row gap-2 justify-end items-end w-full lg:w-auto">
               <Button
-                className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400"
+                className="w-full lg:w-40 bg-red-500 text-white font-bold py-2 px-4 rounded hover:bg-red-400"
                 onClick={() => router.back()}
               >
                 Cancelar
               </Button>
               {!selectedQuestionId && (
                 <Button
-                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                  className="w-full lg:w-40 bg-[#53A85C] text-white font-bold py-2 px-4 rounded hover:bg-[#72c177]"
                   onClick={handleAddNewQuestion}
                 >
                   {isCreatingNew ? "Salvar" : "Adicionar Questão"}
@@ -567,7 +601,7 @@ export default function NewLesson() {
               {selectedQuestionId && (
                 <Button
                   onClick={handleEditClick}
-                  className="bg-[#53A85C] text-white font-bold py-2 px-4 rounded w-40 hover:bg-[#72c177]"
+                  className="w-full lg:w-40 bg-[#53A85C] text-white font-bold py-2 px-4 rounded hover:bg-[#72c177]"
                 >
                   {isEditing ? "Salvar" : "Editar"}
                 </Button>
