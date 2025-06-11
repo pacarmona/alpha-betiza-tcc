@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { PutBlobResult } from "@vercel/blob";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 const TextareaBlock = ({
   value,
@@ -28,39 +28,51 @@ export default function QuestionText({
   description,
   setDescription,
   setImageURL,
+  initialImageURL,
 }: {
   description: string;
   setDescription: (description: string) => void;
   setImageURL: (image: string) => void;
+  initialImageURL?: string;
 }) {
   const [showInput, setShowInput] = useState(false);
-  const [file, setFile] = useState<File | null>(null);
-
   const inputFileRef = useRef<HTMLInputElement>(null);
-  const [blob, setBlob] = useState<PutBlobResult | null>(null);
+  const [currentImageURL, setCurrentImageURL] = useState<string>(
+    initialImageURL || ""
+  );
+
+  useEffect(() => {
+    if (initialImageURL) {
+      setCurrentImageURL(initialImageURL);
+    }
+  }, [initialImageURL]);
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setDescription(e.target.value);
   };
 
   const toggleInput = () => {
-    if (showInput && file) {
+    if (currentImageURL) {
       const confirmed = confirm(
         "Tem certeza que deseja remover a imagem selecionada?"
       );
       if (!confirmed) return;
-      setFile(null);
+      setCurrentImageURL("");
+      setImageURL("");
+      setShowInput(false);
+    } else {
+      setShowInput(!showInput);
     }
-    setShowInput(!showInput);
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFile(e.target.files[0]);
+      // Apenas atualiza o estado do input
+      setShowInput(true);
     }
   };
 
-  const upload = async (event: any) => {
+  const upload = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
 
     if (!inputFileRef.current?.files) {
@@ -73,12 +85,11 @@ export default function QuestionText({
       method: "POST",
       body: file,
     });
-    console.log("response", response);
 
     const newBlob = (await response.json()) as PutBlobResult;
-
-    setBlob(newBlob);
+    setCurrentImageURL(newBlob.url);
     setImageURL(newBlob.url);
+    setShowInput(false);
   };
 
   return (
@@ -90,7 +101,7 @@ export default function QuestionText({
         onChange={handleChange}
       />
 
-      <div>
+      <div className="mt-4">
         <a
           href="#"
           onClick={(e) => {
@@ -99,7 +110,7 @@ export default function QuestionText({
           }}
           className="text-blue-600 hover:underline"
         >
-          {showInput ? "Remover imagem" : "Adicionar imagem"}
+          {currentImageURL ? "Remover imagem" : "Adicionar imagem"}
         </a>
         {showInput && (
           <div className="grid w-full max-w-sm items-center gap-1.5 mt-4">
@@ -113,13 +124,17 @@ export default function QuestionText({
               className="bg-blue-500 text-white px-4 py-2 rounded"
               onClick={upload}
             >
-              enviar
+              Enviar
             </Button>
           </div>
-        )}{" "}
-        {blob && (
-          <div>
-            Blob url: <a href={blob.url}>{blob.url}</a>
+        )}
+        {currentImageURL && (
+          <div className="mt-4">
+            <img
+              src={currentImageURL}
+              alt="Imagem da questão"
+              className="max-w-full h-auto rounded-lg shadow-md"
+            />
           </div>
         )}
       </div>

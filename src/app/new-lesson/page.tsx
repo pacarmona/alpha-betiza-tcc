@@ -17,6 +17,7 @@ interface Question {
   type: string;
   answer_type: string;
   Answers: Answer[];
+  image_url?: string;
 }
 
 interface Answer {
@@ -150,6 +151,7 @@ export default function NewLesson() {
       // Atualizar o formulário com os dados da questão
       setFormData({ questionTitle: questionData.title });
       setDescription(questionData.description);
+      setImageURL(questionData.image_url || "");
 
       // Converter o tipo da questão para o formato esperado
       const questionType = questionData.type.toLowerCase();
@@ -425,6 +427,7 @@ export default function NewLesson() {
             description={description}
             setDescription={setDescription}
             setImageURL={setImageURL}
+            initialImageURL={imageURL}
           />
         );
 
