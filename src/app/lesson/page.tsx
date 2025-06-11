@@ -34,6 +34,81 @@ export default function Lesson() {
   );
   const [isReading, setIsReading] = useState<{ [key: string]: boolean }>({});
   const [scanInterval, setScanInterval] = useState<number>(2000); // Default to 2 seconds
+  const [modalClosed, setModalClosed] = useState(false);
+  const [shouldStartScanning, setShouldStartScanning] = useState(false);
+
+  useEffect(() => {
+    // Modal inicial de acessibilidade
+    Swal.fire({
+      title: "Ferramentas de Acessibilidade",
+      text: "Deseja ativar as ferramentas de acessibilidade?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonText: "Sim, ativar",
+      cancelButtonText: "Não, obrigado",
+      showDenyButton: true,
+      denyButtonText: "Configurar",
+    })
+      .then((result) => {
+        if (result.isConfirmed) {
+          // Ativa com configurações padrão
+          setShouldStartScanning(true);
+          setScanInterval(2000);
+          Swal.fire(
+            "Ferramentas ativadas!",
+            "As ferramentas de acessibilidade foram ativadas com sucesso.",
+            "success"
+          );
+        } else if (result.isDenied) {
+          // Abre modal de configuração
+          Swal.fire({
+            title: "Configurar Ferramentas",
+            html: `
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Tempo de Varredura</label>
+              <select id="scan-interval-config" class="w-full p-2 border rounded">
+                <option value="2000">2 segundos</option>
+                <option value="4000">4 segundos</option>
+                <option value="6000">6 segundos</option>
+              </select>
+            </div>
+            <div class="flex items-center space-x-2">
+              <input type="checkbox" id="scanning-mode-config" class="form-checkbox">
+              <label for="scanning-mode-config" class="text-sm font-medium text-gray-700">Ativar Varredura de Tela</label>
+            </div>
+          `,
+            showCancelButton: true,
+            confirmButtonText: "Salvar",
+            cancelButtonText: "Cancelar",
+            preConfirm: () => {
+              const interval = document.getElementById(
+                "scan-interval-config"
+              ) as HTMLSelectElement;
+              const scanning = document.getElementById(
+                "scanning-mode-config"
+              ) as HTMLInputElement;
+              return {
+                interval: interval.value,
+                scanning: scanning.checked,
+              };
+            },
+          }).then((result) => {
+            if (result.isConfirmed) {
+              setScanInterval(Number(result.value.interval));
+              setShouldStartScanning(result.value.scanning);
+              Swal.fire(
+                "Configurações salvas!",
+                "Suas preferências foram salvas com sucesso.",
+                "success"
+              );
+            }
+          });
+        }
+      })
+      .finally(() => {
+        setModalClosed(true);
+      });
+  }, []);
 
   useEffect(() => {
     async function fetchQuestions() {
@@ -58,6 +133,7 @@ export default function Lesson() {
 
   const handleQuestionSelection = (question: Question) => {
     setSelectedQuestion(question);
+    setIsScanningActive(false);
   };
 
   useEffect(() => {
@@ -88,6 +164,23 @@ export default function Lesson() {
 
     fetchAnswers();
   }, [questions, selectedQuestion]);
+
+  useEffect(() => {
+    if (!selectedQuestion || !modalClosed) return;
+
+    const timer = setTimeout(() => {
+      readText(selectedQuestion.description, selectedQuestion.id);
+
+      // Inicia a varredura 5 segundos após a leitura da descrição
+      if (shouldStartScanning) {
+        setTimeout(() => {
+          setIsScanningActive(true);
+        }, 5000);
+      }
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [selectedQuestion, modalClosed, shouldStartScanning]);
 
   useEffect(() => {
     if (!isScanningActive) {
@@ -186,6 +279,7 @@ export default function Lesson() {
             setSelectedQuestion(questions[currentIndex + 1]);
             setSelectedAnswer(null);
             setHighlightedAnswer(null);
+            setIsScanningActive(false);
           } else {
             Swal.fire({
               icon: "success",
@@ -348,7 +442,7 @@ export default function Lesson() {
                             ${
                               isScanningActive &&
                               highlightedAnswer === answer.id
-                                ? "border-blue-500 border-2"
+                                ? "border-blue-500 border-2 bg-blue-100"
                                 : ""
                             } ${
                             selectedAnswer === answer.id
