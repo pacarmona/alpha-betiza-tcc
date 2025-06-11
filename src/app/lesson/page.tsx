@@ -209,6 +209,7 @@ export default function Lesson() {
 
         if (selectedAnswerObj) {
           if (selectedAnswerObj.is_correct) {
+            setIsScanningActive(false);
             successText("Resposta correta!").then(() => {
               const currentIndex = questions.findIndex(
                 (q) => q.id === selectedQuestion?.id
@@ -217,6 +218,9 @@ export default function Lesson() {
                 setSelectedQuestion(questions[currentIndex + 1]);
                 setSelectedAnswer(null);
                 setHighlightedAnswer(null);
+                setTimeout(() => {
+                  setIsScanningActive(true);
+                }, 10000);
               } else {
                 Swal.fire({
                   icon: "success",
@@ -271,6 +275,7 @@ export default function Lesson() {
     );
     if (selectedAnswerObj) {
       if (selectedAnswerObj.is_correct) {
+        setIsScanningActive(false);
         successText("Resposta correta!").then(() => {
           const currentIndex = questions.findIndex(
             (q) => q.id === selectedQuestion?.id
@@ -279,7 +284,9 @@ export default function Lesson() {
             setSelectedQuestion(questions[currentIndex + 1]);
             setSelectedAnswer(null);
             setHighlightedAnswer(null);
-            setIsScanningActive(false);
+            setTimeout(() => {
+              setIsScanningActive(true);
+            }, 10000);
           } else {
             Swal.fire({
               icon: "success",
