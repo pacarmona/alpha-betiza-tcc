@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 // import { Switch } from "./ui/switch";
 
 export default function TopBar() {
-  const { userId } = useUser();
+  const { userId, setUserId } = useUser();
   const router = useRouter();
   // const pathname = usePathname(); // Obtém a rota atual
   // const [isStudent, setIsStudent] = useState(false);
@@ -24,6 +24,11 @@ export default function TopBar() {
   //   setIsStudent(checked);
   // };
 
+  const handleLogout = () => {
+    setUserId(null);
+    router.push("/login");
+  };
+
   return (
     <div className="w-full bg-[#D9D9D9] p-4 flex justify-between items-center">
       {/* Barra Superior */}
@@ -38,12 +43,22 @@ export default function TopBar() {
         <a href={`/`} className="text-blue-600 text-base">
           Início
         </a>
-        <a
-          href={`/view-register/${userId}`}
-          className="text-blue-600 text-base"
-        >
-          Ver Cadastro
-        </a>
+        {userId && (
+          <>
+            <a
+              href={`/view-register/${userId}`}
+              className="text-blue-600 text-base"
+            >
+              Ver Cadastro
+            </a>
+            <button
+              onClick={handleLogout}
+              className="text-red-600 text-base hover:text-red-800"
+            >
+              Sair
+            </button>
+          </>
+        )}
       </div>
       {/* <div className="flex gap-4 items-center">
         <Switch checked={isStudent} onCheckedChange={handleSwitchChange} />
