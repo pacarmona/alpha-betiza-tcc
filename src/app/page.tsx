@@ -15,6 +15,7 @@ import { useUser } from "@/providers/UserProvider";
 import { Lesson } from "@prisma/client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Swal from "sweetalert2";
 
 export default function Home() {
   const { userId } = useUser();
@@ -33,6 +34,51 @@ export default function Home() {
   }, [router, token]);
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
+
+  const deleteActivity = async (lessonId: string) => {
+    try {
+      const result = await Swal.fire({
+        title: "Tem certeza?",
+        text: "Esta ação não poderá ser revertida!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Sim, excluir!",
+        cancelButtonText: "Cancelar",
+      });
+
+      if (result.isConfirmed) {
+        const response = await fetch(`/api/lessons/${lessonId}`, {
+          method: "DELETE",
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "Erro ao excluir a atividade");
+        }
+
+        // Atualiza a lista de atividades após a exclusão
+        setLessons(lessons.filter((lesson) => lesson.id !== lessonId));
+
+        Swal.fire({
+          title: "Sucesso!",
+          text: "Atividade excluída com sucesso!",
+          icon: "success",
+          confirmButtonText: "OK",
+        });
+      }
+    } catch (error) {
+      console.error("Erro ao excluir atividade:", error);
+      Swal.fire({
+        title: "Erro!",
+        text: "Não foi possível excluir a atividade. Por favor, tente novamente mais tarde.",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+    }
+  };
 
   useEffect(() => {
     async function fetchLessons() {
@@ -107,7 +153,13 @@ export default function Home() {
             </CardFooter>
           </Card>
           {lessons.map((activity, index) => (
-            <Card key={index} className="w-[350px] bg-[#D9D9D9]">
+            <Card key={index} className="w-[350px] bg-[#D9D9D9] relative">
+              <button
+                onClick={() => deleteActivity(activity.id)}
+                className="absolute top-2 right-2 text-white hover:text-gray-200 text-xl font-bold"
+              >
+                ×
+              </button>
               <CardHeader>
                 <CardTitle>{activity.title}</CardTitle>
                 <CardDescription>{}</CardDescription>
