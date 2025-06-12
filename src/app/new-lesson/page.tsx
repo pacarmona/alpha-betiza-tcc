@@ -1,6 +1,4 @@
 "use client";
-import BottomBar from "@/components/bottomBar";
-import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -487,10 +485,6 @@ export default function NewLesson() {
 
   return (
     <div className="w-full flex flex-col min-h-screen">
-      {/* Barra superior */}
-      <TopBar />
-
-      {/* Conteúdo principal */}
       <div className="w-full flex flex-col lg:flex-row flex-grow">
         {/* Barra lateral */}
         <div className="bg-[#D9D9D9] w-full lg:w-[15%] p-4">
@@ -613,7 +607,6 @@ export default function NewLesson() {
           </div>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }

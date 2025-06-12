@@ -1,8 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
-import BottomBar from "@/components/bottomBar";
-import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -349,7 +347,6 @@ export default function Lesson() {
 
   return (
     <div className="w-full flex flex-col h-full">
-      <TopBar />
       <div className="w-full h-full flex">
         <div className="flex flex-col gap-4 w-[85%] ml-10 mt-10">
           <div className="flex items-center justify-between mb-4">
@@ -519,7 +516,6 @@ export default function Lesson() {
           </div>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }

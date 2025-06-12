@@ -1,6 +1,4 @@
 "use client";
-import BottomBar from "@/components/bottomBar";
-import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -83,8 +81,6 @@ export default function EditRegister() {
 
   return (
     <div className="w-full flex flex-col h-full">
-      {/* Barra superior */}
-      <TopBar />
       <div className="flex w-full h-full flex-col">
         <div className="flex flex-wrap flex-col gap-4 w-[85%] ml-10 mt-10">
           <div className="text-left font-bold text-4xl text-black">
@@ -191,7 +187,6 @@ export default function EditRegister() {
           </div>
         </div>
       </div>
-      <BottomBar />
     </div>
   );
 }

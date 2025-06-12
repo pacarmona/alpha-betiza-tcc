@@ -1,6 +1,4 @@
 "use client";
-import BottomBar from "@/components/bottomBar";
-import TopBar from "@/components/topBar";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -129,8 +127,6 @@ export default function Home() {
 
   return (
     <div className="w-full flex flex-col h-full">
-      {/* Barra superior */}
-      <TopBar />
       <div className="w-full h-full flex flex-col ml-10 mt-10">
         {/*<div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">*/}
         <div className="flex flex-wrap gap-4">
@@ -177,8 +173,6 @@ export default function Home() {
           ))}
         </div>
       </div>
-      {/* Barra superior */}
-      <BottomBar />
       {isModalOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="relative bg-white p-6 rounded-lg shadow-lg">
