@@ -1,28 +1,28 @@
 "use client";
 import { useUser } from "@/providers/UserProvider";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Switch } from "./ui/switch";
+import { useRouter } from "next/navigation";
+// import { useEffect, useState } from "react";
+// import { Switch } from "./ui/switch";
 
 export default function TopBar() {
   const { userId } = useUser();
   const router = useRouter();
-  const pathname = usePathname(); // Obtém a rota atual
-  const [isStudent, setIsStudent] = useState(false);
+  // const pathname = usePathname(); // Obtém a rota atual
+  // const [isStudent, setIsStudent] = useState(false);
 
-  useEffect(() => {
-    // Define o estado do switch com base na rota atual
-    setIsStudent(pathname === "/student");
-  }, [pathname]);
+  // useEffect(() => {
+  //   // Define o estado do switch com base na rota atual
+  //   setIsStudent(pathname === "/student");
+  // }, [pathname]);
 
-  const handleSwitchChange = (checked: boolean) => {
-    if (checked) {
-      router.push("/student");
-    } else {
-      router.push("/");
-    }
-    setIsStudent(checked);
-  };
+  // const handleSwitchChange = (checked: boolean) => {
+  //   if (checked) {
+  //     router.push("/student");
+  //   } else {
+  //     router.push("/");
+  //   }
+  //   setIsStudent(checked);
+  // };
 
   return (
     <div className="w-full bg-[#D9D9D9] p-4 flex justify-between items-center">
@@ -45,10 +45,10 @@ export default function TopBar() {
           Ver Cadastro
         </a>
       </div>
-      <div className="flex gap-4 items-center">
+      {/* <div className="flex gap-4 items-center">
         <Switch checked={isStudent} onCheckedChange={handleSwitchChange} />
         <span className="text-base">Área do Aluno</span>
-      </div>
+      </div> */}
     </div>
   );
 }
