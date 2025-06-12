@@ -139,7 +139,7 @@ export default function NewRegister() {
         confirmButtonText: "OK",
       }).then(() => {
         // Redireciona o usuário após fechar o modal
-        router.push("/login"); // Redireciona para a tela de autenticação
+        router.push("/authenticate"); // Redireciona para a tela de autenticação
       });
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -260,7 +260,10 @@ export default function NewRegister() {
             </div>
           </div>
           <div className="text-center flex gap-4 justify-end items-end mt-20">
-            <Button className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400">
+            <Button
+              onClick={() => router.back()}
+              className="bg-red-500 text-white font-bold py-2 px-4 rounded w-40 hover:bg-red-400"
+            >
               Cancelar
             </Button>
             <Button
