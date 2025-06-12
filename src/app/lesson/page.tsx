@@ -398,15 +398,15 @@ export default function Lesson() {
             <div>
               {selectedQuestion && (
                 <div className="border p-4 rounded shadow-md bg-white w-full">
-                  <p className="text-sm text-gray-500 mt-2">
+                  {/* <p className="text-sm text-gray-500 mt-2 text-center">
                     Tipo: {selectedQuestion.type} | Resposta:{" "}
                     {selectedQuestion.answer_type}
-                  </p>
-                  <h2 className="text-lg font-bold">
+                  </p> */}
+                  <h2 className="text-lg font-bold text-center">
                     {selectedQuestion.title}
                   </h2>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-gray-600">
+                  <div className="flex flex-col items-center gap-2 mt-4">
+                    <p className="text-sm text-gray-600 text-center max-w-2xl">
                       {selectedQuestion.description}
                     </p>
                     {selectedQuestion.image_url && (
@@ -437,61 +437,63 @@ export default function Lesson() {
 
                   <div className="mt-4">
                     <h3 className="text-md font-semibold">Respostas:</h3>
-                    {answers.map((answer, index) => (
-                      <div
-                        key={answer.id}
-                        className="flex flex-col items-start mt-4"
-                      >
-                        <Label className="mb-2" htmlFor={`text0${index + 1}`}>
-                          Resposta {index + 1}
-                        </Label>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      {answers.map((answer, index) => (
                         <div
-                          id={`text0${index + 1}`}
-                          className={`border p-2 rounded w-full text-gray-700 cursor-pointer 
-                            ${
-                              isScanningActive &&
-                              highlightedAnswer === answer.id
-                                ? "border-blue-500 border-2 bg-blue-100"
-                                : ""
-                            } ${
-                            selectedAnswer === answer.id
-                              ? answer.is_correct
-                                ? "bg-green-100"
-                                : "bg-red-100"
-                              : ""
-                          }`}
-                          onClick={() => handleAnswerSelection(answer.id)}
+                          key={answer.id}
+                          className="flex flex-col items-start"
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex flex-col gap-2">
-                              <p className="text-sm">{answer.text}</p>
-                              {answer.image_url && (
-                                <img
-                                  src={answer.image_url}
-                                  alt="Imagem da resposta"
-                                  className="max-w-[200px] h-auto rounded"
+                          <Label className="mb-2" htmlFor={`text0${index + 1}`}>
+                            Resposta {index + 1}
+                          </Label>
+                          <div
+                            id={`text0${index + 1}`}
+                            className={`border p-2 rounded w-full text-gray-700 cursor-pointer 
+                              ${
+                                isScanningActive &&
+                                highlightedAnswer === answer.id
+                                  ? "border-blue-500 border-2 bg-blue-100"
+                                  : ""
+                              } ${
+                              selectedAnswer === answer.id
+                                ? answer.is_correct
+                                  ? "bg-green-100"
+                                  : "bg-red-100"
+                                : ""
+                            }`}
+                            onClick={() => handleAnswerSelection(answer.id)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex flex-col gap-2">
+                                <p className="text-sm">{answer.text}</p>
+                                {answer.image_url && (
+                                  <img
+                                    src={answer.image_url}
+                                    alt="Imagem da resposta"
+                                    className="max-w-[200px] h-auto rounded"
+                                  />
+                                )}
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  readText(answer.text, answer.id);
+                                }}
+                                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                              >
+                                <Volume2
+                                  className={`w-5 h-5 ${
+                                    isReading[answer.id]
+                                      ? "text-blue-500"
+                                      : "text-gray-500"
+                                  }`}
                                 />
-                              )}
+                              </button>
                             </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                readText(answer.text, answer.id);
-                              }}
-                              className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                            >
-                              <Volume2
-                                className={`w-5 h-5 ${
-                                  isReading[answer.id]
-                                    ? "text-blue-500"
-                                    : "text-gray-500"
-                                }`}
-                              />
-                            </button>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
