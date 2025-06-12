@@ -25,18 +25,23 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("userId");
-    if (storedUserId) {
-      setUserId(storedUserId);
+    // Só acessa localStorage no cliente
+    if (typeof window !== "undefined") {
+      const storedUserId = localStorage.getItem("userId");
+      if (storedUserId) {
+        setUserId(storedUserId);
+      }
     }
   }, []);
 
-  // Atualiza o localStorage sempre que o userId mudar
   useEffect(() => {
-    if (userId) {
-      localStorage.setItem("userId", userId);
-    } else {
-      localStorage.removeItem("userId");
+    // Também protege o set/remove do localStorage
+    if (typeof window !== "undefined") {
+      if (userId) {
+        localStorage.setItem("userId", userId);
+      } else {
+        localStorage.removeItem("userId");
+      }
     }
   }, [userId]);
 

@@ -6,9 +6,10 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
 import { Sliders, Volume2 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import LessonContent from "./LessonContent";
 
 type Answer = PrismaAnswer & {
   selected?: boolean;
@@ -16,8 +17,7 @@ type Answer = PrismaAnswer & {
 
 export default function Lesson() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const lessonId = searchParams.get("lessonId");
+  const [lessonId, setLessonId] = useState<string | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [isScanningActive, setIsScanningActive] = useState(false);
@@ -347,6 +347,10 @@ export default function Lesson() {
 
   return (
     <div className="w-full flex flex-col h-full">
+      <Suspense fallback={null}>
+        <LessonContent onSetLessonId={setLessonId} />
+      </Suspense>
+
       <div className="w-full h-full flex">
         <div className="flex flex-col gap-4 w-[85%] ml-10 mt-10">
           <div className="flex items-center justify-between mb-4">

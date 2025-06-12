@@ -4,7 +4,9 @@ import * as bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+import { withAccelerate } from "@prisma/extension-accelerate";
+
+const prisma = new PrismaClient().$extends(withAccelerate());
 const SECRET_KEY = process.env.JWT_SECRET_KEY; // Armazene em variável de ambiente em produção
 
 export async function POST(req: Request) {

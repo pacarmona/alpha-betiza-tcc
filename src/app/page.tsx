@@ -19,17 +19,20 @@ export default function Home() {
   const { userId } = useUser();
 
   const router = useRouter();
-  const token = localStorage.getItem("authToken");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
   };
+
   useEffect(() => {
-    if (!token) {
-      router.push("/login");
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("authToken");
+      if (!token) {
+        router.push("/login");
+      }
     }
-  }, [router, token]);
+  }, [router]);
 
   const [lessons, setLessons] = useState<Lesson[]>([]);
 

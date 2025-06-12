@@ -2,9 +2,10 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import NewLessonContent from "./NewLessonContent";
 import QuestionText from "./questionText";
 import TextResponseType from "./textResponseType";
 
@@ -29,8 +30,6 @@ interface Answer {
 
 export default function NewLesson() {
   const router = useRouter();
-  //const params = useParams();
-  const searchParams = useSearchParams();
 
   const [questions, setQuestions] = useState<{ id: string; title: string }[]>(
     []
@@ -118,13 +117,6 @@ export default function NewLesson() {
       errorText("Erro ao carregar as questões");
     }
   }, [lessonId]);
-
-  useEffect(() => {
-    const id = searchParams.get("lessonId");
-    if (id) {
-      setLessonId(id);
-    }
-  }, [searchParams]);
 
   useEffect(() => {
     if (lessonId) {
@@ -485,6 +477,10 @@ export default function NewLesson() {
 
   return (
     <div className="w-full flex flex-col min-h-screen">
+      <Suspense fallback={null}>
+        <NewLessonContent onSetLessonId={setLessonId} />
+      </Suspense>
+
       <div className="w-full flex flex-col lg:flex-row flex-grow">
         {/* Barra lateral */}
         <div className="bg-[#D9D9D9] w-full lg:w-[15%] p-4">
