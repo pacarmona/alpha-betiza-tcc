@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 import QuestionText from "./questionText";
 import TextResponseType from "./textResponseType";
@@ -99,7 +99,7 @@ export default function NewLesson() {
     });
   };
 
-  const fetchQuestions = async () => {
+  const fetchQuestions = useCallback(async () => {
     if (!lessonId) return;
     try {
       const response = await fetch(`/api/question?lessonId=${lessonId}`);
@@ -119,7 +119,7 @@ export default function NewLesson() {
       console.error(error);
       errorText("Erro ao carregar as questões");
     }
-  };
+  }, [lessonId]);
 
   useEffect(() => {
     const id = searchParams.get("lessonId");
@@ -132,7 +132,7 @@ export default function NewLesson() {
     if (lessonId) {
       fetchQuestions();
     }
-  }, [lessonId]);
+  }, [fetchQuestions, lessonId]);
 
   const handleQuestionClick = async (questionId: string) => {
     setSelectedQuestionId(questionId);

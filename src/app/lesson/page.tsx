@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 "use client";
 
 import BottomBar from "@/components/bottomBar";
@@ -8,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Answer as PrismaAnswer, Question } from "@prisma/client";
 import { Sliders, Volume2 } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Swal from "sweetalert2";
 
 type Answer = PrismaAnswer & {
@@ -36,6 +37,38 @@ export default function Lesson() {
   const [scanInterval, setScanInterval] = useState<number>(2000); // Default to 2 seconds
   const [modalClosed, setModalClosed] = useState(false);
   const [shouldStartScanning, setShouldStartScanning] = useState(false);
+
+  const readText = useCallback(
+    (text: string, answerId: string) => {
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+
+        const newReadingState = { ...isReading };
+        Object.keys(newReadingState).forEach((key) => {
+          newReadingState[key] = false;
+        });
+        newReadingState[answerId] = true;
+        setIsReading(newReadingState);
+
+        if (selectedQuestion && answerId === selectedQuestion.id) {
+          setIsDescriptionAudioPlayed(true);
+        }
+
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "pt-BR";
+
+        utterance.onend = () => {
+          setIsReading((prev) => ({
+            ...prev,
+            [answerId]: false,
+          }));
+        };
+
+        window.speechSynthesis.speak(utterance);
+      }
+    },
+    [isReading, selectedQuestion]
+  );
 
   useEffect(() => {
     // Modal inicial de acessibilidade
@@ -180,7 +213,7 @@ export default function Lesson() {
     }, 5000);
 
     return () => clearTimeout(timer);
-  }, [selectedQuestion, modalClosed, shouldStartScanning]);
+  }, [selectedQuestion, modalClosed, shouldStartScanning, readText]);
 
   useEffect(() => {
     if (!isScanningActive) {
@@ -257,6 +290,7 @@ export default function Lesson() {
     selectedQuestion,
     router,
     scanInterval,
+    readText,
   ]);
 
   const handleAnswerSelection = (selectedAnswerId: string) => {
@@ -304,35 +338,6 @@ export default function Lesson() {
           setHighlightedAnswer(null);
         });
       }
-    }
-  };
-
-  const readText = (text: string, answerId: string) => {
-    if ("speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-
-      const newReadingState = { ...isReading };
-      Object.keys(newReadingState).forEach((key) => {
-        newReadingState[key] = false;
-      });
-      newReadingState[answerId] = true;
-      setIsReading(newReadingState);
-
-      if (selectedQuestion && answerId === selectedQuestion.id) {
-        setIsDescriptionAudioPlayed(true);
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = "pt-BR";
-
-      utterance.onend = () => {
-        setIsReading((prev) => ({
-          ...prev,
-          [answerId]: false,
-        }));
-      };
-
-      window.speechSynthesis.speak(utterance);
     }
   };
 

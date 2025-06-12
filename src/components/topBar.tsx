@@ -1,3 +1,4 @@
+"use client";
 import { useUser } from "@/providers/UserProvider";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";

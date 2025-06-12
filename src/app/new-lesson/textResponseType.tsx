@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import InputBlock from "@/components/inputBlock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -78,7 +79,12 @@ export default function TextResponseType({
   );
 
   const [imageUrls, setImageUrls] = useState<{ [key in AnswerKey]: string }>(
-    initialAnswerImages || {
+    (initialAnswerImages as {
+      text01: string;
+      text02: string;
+      text03: string;
+      text04: string;
+    }) || {
       text01: "",
       text02: "",
       text03: "",
@@ -93,7 +99,7 @@ export default function TextResponseType({
   // Estado unificado para gerenciar a exibição de todos os inputs de imagem
   const [showAllInputs, setShowAllInputs] = useState(false);
 
-  const [files, setFiles] = useState<{ [key in AnswerKey]: File | null }>({
+  const [, setFiles] = useState<{ [key in AnswerKey]: File | null }>({
     text01: null,
     text02: null,
     text03: null,
